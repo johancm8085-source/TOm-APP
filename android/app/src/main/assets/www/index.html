@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>TOM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TOM">
+<meta name="theme-color" content="#14120f">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<style>
+  :root{
+    --bg: #14120f;
+    --panel: #1c1a16;
+    --panel-2: #242119;
+    --border: rgba(214,178,110,0.16);
+    --gold: #cda15a;
+    --gold-dim: #8a7147;
+    --text: #ece7dc;
+    --text-dim: #9b9585;
+    --green: #6fae8a;
+    --red: #c96a5a;
+    --teal: #5a9c9c;
+    --blue: #6b93c9;
+    --purple: #9b8ac9;
+    --pink: #c98ab0;
+    --coral: #c98a5a;
+    --amber: #cda15a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--bg); color: var(--text);
+    min-height:100vh; padding: 60px 16px 60px; position:relative;
+  }
+  .logo{
+    position:absolute; top:18px; left:18px;
+    font-family: system-ui, sans-serif; font-size:14px; font-weight:700;
+    letter-spacing:2px; color: var(--gold);
+    border:1px solid var(--border); border-radius:8px; padding:5px 10px;
+  }
+  .tabs{
+    display:flex; gap:6px; max-width:520px; margin:0 auto 18px; border-bottom:1px solid var(--border);
+  }
+  .tab{
+    flex:1; text-align:center; padding:10px 6px; cursor:pointer;
+    color: var(--text-dim); font-size:14px; letter-spacing:0.3px;
+    border-bottom:2px solid transparent; transition: color .2s, border-color .2s;
+    font-family: system-ui, sans-serif;
+  }
+  .tab.active{ color: var(--gold); border-color: var(--gold); }
+  .wrap{ max-width:520px; margin:0 auto; }
+  .balance-card{
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border:1px solid var(--border); border-radius:14px; padding:20px; text-align:center; margin-bottom:18px;
+  }
+  .balance-label{ font-size:12px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; font-family: system-ui, sans-serif;}
+  .balance-sub-label{ font-size:13px; color:var(--gold); margin-top:10px; font-family: system-ui, sans-serif; letter-spacing:0.5px;}
+  .balance-amount{ font-size:34px; margin-top:4px; color: var(--gold); cursor:pointer; display:inline-flex; align-items:center; gap:8px; justify-content:center; }
+  .balance-edit-hint{ font-size:11px; color:var(--text-dim); margin-top:2px; font-family: system-ui, sans-serif; }
+  .balance-edit-hint i{ font-style:normal; }
+  #balanceInput{
+    font-size:28px; text-align:center; background: var(--panel-2); color:var(--gold);
+    border:1px solid var(--border); border-radius:8px; padding:4px 10px; width:180px;
+    font-family: 'Georgia','Times New Roman', serif;
+  }
+  .balance-sub{ display:flex; justify-content:center; gap:18px; margin-top:10px; font-size:12px; color:var(--text-dim); font-family: system-ui, sans-serif;}
+  .balance-sub span.in{ color: var(--green); }
+  .balance-sub span.out{ color: var(--red); }
+
+  #balanceModeSelect{
+    flex:none; background:transparent; color:var(--gold); border:1px solid var(--border);
+    border-radius:6px; padding:2px 6px; font-size:12px; margin-top:10px; font-family: system-ui, sans-serif;
+    letter-spacing:0.5px; text-align:center;
+  }
+
+  .chart-card{
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:16px; font-family: system-ui, sans-serif;
+  }
+  .chart-body{ display:flex; align-items:center; gap:16px; margin-top:8px; }
+  .pie{ width:100px; height:100px; border-radius:50%; flex:0 0 100px; }
+  .chart-legend{ flex:1; display:flex; flex-direction:column; gap:6px; font-size:12.5px; min-width:0; }
+  .legend-row{ display:flex; align-items:center; gap:8px; }
+  .legend-dot{ width:10px; height:10px; border-radius:3px; flex:0 0 10px; }
+  .legend-name{ flex:1; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .legend-pct{ color:var(--text-dim); flex:0 0 auto; }
+
+  .filters{ display:flex; gap:8px; margin-bottom:16px; font-family: system-ui, sans-serif;}
+  select{
+    flex:1; background: var(--panel); color: var(--text); border:1px solid var(--border);
+    border-radius:8px; padding:8px 10px; font-size:13px; font-family: system-ui, sans-serif;
+  }
+  .day-filter-btn{
+    flex:1; background: var(--panel); color: var(--text); border:1px solid var(--border);
+    border-radius:8px; padding:8px 10px; font-size:13px; font-family: system-ui, sans-serif;
+    text-align:left; cursor:pointer;
+  }
+  .day-filter-btn:hover{ border-color: var(--gold); }
+  .modal-backdrop{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6);
+    align-items:center; justify-content:center; z-index:100; padding:20px;
+  }
+  .modal-backdrop.open{ display:flex; }
+  .modal-box{
+    width:100%; max-width:340px; max-height:70vh; overflow-y:auto;
+    background: var(--panel-2); border:1px solid var(--border); border-radius:14px;
+    padding:16px; font-family: system-ui, sans-serif;
+  }
+  .modal-header{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;
+    font-size:14px; color:var(--gold); letter-spacing:0.5px;
+  }
+  .modal-close{ background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer; padding:0; }
+  .modal-close:hover{ color:var(--red); }
+  .modal-days-grid{ display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; }
+  .day-chip{
+    background: var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:10px 6px; text-align:center; cursor:pointer; font-size:13px; color:var(--text);
+  }
+  .day-chip:hover{ border-color: var(--gold); }
+  .day-chip.active{ background: var(--gold-dim); color: var(--bg); border-color:var(--gold-dim); }
+  .day-chip.all-chip{ grid-column: 1 / -1; color:var(--gold); }
+
+  .items-block{ margin-bottom:16px; font-family: system-ui, sans-serif; position:relative; }
+  .items-title{ font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+  .select-wrap{ position:relative; }
+  .select-btn{
+    width:100%; display:flex; align-items:center; justify-content:space-between;
+    background: var(--panel); border:1px solid var(--border); color:var(--text);
+    border-radius:10px; padding:10px 12px; font-size:14px; cursor:pointer; font-family: system-ui, sans-serif;
+  }
+  .select-btn-inner{ display:flex; align-items:center; gap:10px; }
+  .select-btn .chevron{ color:var(--text-dim); transition: transform .15s; }
+  .select-btn.open .chevron{ transform: rotate(180deg); }
+  .icon-wrap{
+    width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; flex:0 0 26px;
+  }
+  .icon-wrap svg{ width:16px; height:16px; }
+  .select-menu{
+    display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:20;
+    background: var(--panel-2); border:1px solid var(--border); border-radius:10px;
+    max-height:260px; overflow-y:auto; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  }
+  .select-menu.open{ display:block; }
+  .menu-row{
+    display:flex; align-items:center; gap:4px; padding:6px 8px; font-size:13.5px;
+  }
+  .menu-row:hover{ background: var(--panel); }
+  .menu-row-main{ display:flex; align-items:center; gap:10px; flex:1; min-width:0; cursor:pointer; padding:3px 4px; }
+  .menu-row-label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .menu-icon-btn{
+    background:none; border:none; color:var(--text-dim); font-size:14px; cursor:pointer;
+    padding:4px 6px; flex:0 0 auto; line-height:1;
+  }
+  .menu-icon-btn:hover{ color:var(--gold); }
+  .del-item-btn:hover{ color:var(--red); }
+  .menu-add-row{
+    display:flex; align-items:center; gap:10px; padding:9px 12px; cursor:pointer; font-size:13.5px;
+    color: var(--gold); border-top:1px solid var(--border);
+  }
+  .menu-add-row:hover{ background: var(--panel); }
+  .menu-add-input{
+    width:100%; background: var(--panel); color:var(--text); border:1px solid var(--border);
+    border-radius:6px; padding:6px 8px; font-size:13px; font-family: system-ui, sans-serif;
+  }
+
+  form{
+    background: var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:14px; margin-bottom:18px; display:flex; flex-wrap:wrap; gap:8px; font-family: system-ui, sans-serif;
+  }
+  form input, form select{
+    background: var(--panel-2); color: var(--text); border:1px solid var(--border);
+    border-radius:8px; padding:9px 10px; font-size:13px;
+  }
+  #f-desc{ flex:1 1 160px; }
+  #f-amount{ flex:0 1 110px; }
+  #f-type{ flex:0 1 100px; }
+  #f-date{ flex:0 1 140px; }
+  button{
+    background: var(--gold-dim); color: var(--bg); border:none; border-radius:8px;
+    padding:9px 16px; font-size:13px; font-weight:600; cursor:pointer; font-family: system-ui, sans-serif;
+  }
+  button:hover{ background: var(--gold); }
+
+  .movs{ display:flex; flex-direction:column; gap:8px; }
+  .mov{
+    display:flex; justify-content:space-between; align-items:center;
+    background: var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:11px 14px; font-family: system-ui, sans-serif;
+  }
+  .mov-left{ display:flex; align-items:center; gap:10px; }
+  .mov-desc{ font-size:14px; }
+  .mov-meta{ font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .mov-amount{ font-size:15px; font-weight:600; }
+  .mov-amount.in{ color: var(--green); }
+  .mov-amount.out{ color: var(--red); }
+  .del{ background:none; border:none; color:var(--text-dim); font-size:16px; cursor:pointer; padding:0 0 0 10px; }
+  .del:hover{ color: var(--red); }
+  .empty{ text-align:center; color:var(--text-dim); padding:30px 0; font-family: system-ui, sans-serif; font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="logo">TOM</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="gastos">Gastos</div>
+  <div class="tab" data-tab="entretenimiento">Entretenimiento</div>
+  <div class="tab" data-tab="ahorro">Ahorro</div>
+</div>
+
+<div class="wrap">
+
+  <div class="balance-card">
+    <div class="balance-label">Dinero</div>
+    <select id="balanceModeSelect">
+      <option value="saldo">Saldo</option>
+      <option value="total">Total</option>
+    </select>
+    <div class="balance-amount" id="balance">$0</div>
+    <div class="balance-edit-hint" id="balanceEditHint">Toca el saldo para poner un monto en efectivo</div>
+    <div class="balance-sub">
+      <span>Entradas: <span class="in" id="totalIn">$0</span></span>
+      <span>Salidas: <span class="out" id="totalOut">$0</span></span>
+    </div>
+  </div>
+
+  <div class="filters">
+    <select id="filterMonth"><option value="">Mes</option></select>
+    <button type="button" class="day-filter-btn" id="filterDayBtn">Días</button>
+  </div>
+
+  <div class="chart-card" id="chartCard" style="display:none;">
+    <div class="items-title">En qué se fue el dinero</div>
+    <div class="chart-body">
+      <div class="pie" id="pieChart"></div>
+      <div class="chart-legend" id="chartLegend"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="dayModalBackdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>Elegir día</span>
+        <button type="button" class="modal-close" id="dayModalClose">×</button>
+      </div>
+      <div class="modal-days-grid" id="dayModalGrid"></div>
+    </div>
+  </div>
+
+  <div class="items-block">
+    <div class="items-title">Lista</div>
+    <div class="select-wrap" id="selectWrap">
+      <button type="button" class="select-btn" id="selectBtn">
+        <span class="select-btn-inner" id="selectBtnInner">Elegir ítem</span>
+        <span class="chevron">⌄</span>
+      </button>
+      <div class="select-menu" id="selectMenu"></div>
+    </div>
+  </div>
+
+  <form id="form">
+    <input id="f-desc" type="text" placeholder="Descripción" required>
+    <input id="f-amount" type="number" step="0.01" placeholder="Monto" required>
+    <select id="f-type">
+      <option value="out">Gasto</option>
+      <option value="in">Ingreso</option>
+    </select>
+    <input id="f-date" type="date">
+    <button type="submit">Agregar</button>
+  </form>
+
+  <div class="movs" id="movs"></div>
+
+</div>
+
+<script>
+// Guardado real en el celular (localStorage), para que la app funcione
+// instalada y sin internet, fuera de Claude.ai.
+if (!window.storage) {
+  window.storage = {
+    async get(key) {
+      const v = localStorage.getItem(key);
+      return v === null ? null : { key, value: v, shared: false };
+    },
+    async set(key, value) {
+      localStorage.setItem(key, value);
+      return { key, value, shared: false };
+    }
+  };
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+const TABS = ['gastos','entretenimiento','ahorro'];
+let currentTab = 'gastos';
+let data = { gastos: [], entretenimiento: [], ahorro: [] };
+
+const DEFAULT_ITEMS = {
+  gastos: ['Gasolina','Arriendo','Comida para gatos','Arena para gatos','Comida Diaria','Mercado','Aceite para la moto','Productos de aseo','Lichigo','Prestamos','Tarjeta de credito','Kiosko'],
+  entretenimiento: ['Helado','Hamburguesas o perro','Arepas','Viajes','dulces'],
+  ahorro: []
+};
+let items = { gastos: [], entretenimiento: [], ahorro: [] };
+let initialBalance = { gastos: 0, entretenimiento: 0, ahorro: 0 };
+let balanceMode = 'saldo';
+
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function computeTotal(){
+  let total = 0;
+  TABS.forEach(t=>{
+    total += initialBalance[t];
+    data[t].forEach(m=>{ total += m.type==='in' ? m.amount : -m.amount; });
+  });
+  return total;
+}
+
+// --- Iconos de línea (SVG) por ítem, con color temático ---
+const ICON_PATHS = {
+  house: '<path d="M3 9 L10 3 L17 9 M5 8 V17 H15 V8 M8 17 V12 H12 V17"/>',
+  gas: '<path d="M5 17V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v12 M5 17h6 M11 9h2a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V8l-2-2"/>',
+  cat: '<path d="M4 8 L6 3 L8 7 M16 8 L14 3 L12 7 M4 8a6 6 0 1 0 12 0a6 6 0 1 0-12 0"/>',
+  tray: '<path d="M3 13h14v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3 M3 13l2-6h10l2 6"/>',
+  bowl: '<path d="M3 10a7 4 0 0 0 14 0 M3 10h14"/>',
+  cart: '<path d="M3 4h2l2 10h9l2-7H6 M8 17a1 1 0 1 0 0.01 0 M14 17a1 1 0 1 0 0.01 0"/>',
+  oil: '<path d="M10 3C6 8 5 11 5 13a5 5 0 0 0 10 0c0-2-1-5-5-10z"/>',
+  spray: '<path d="M7 8h4v9a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V8z M8 8V5h2v3 M13 6l3-1 M13 8h3 M13 10l3 1"/>',
+  tag: '<path d="M4 4h6l7 7-8 8-7-7V4z M8 8a1 1 0 1 0 0.01 0"/>',
+  coin: '<path d="M10 3a7 7 0 1 0 0.01 0 M10 6v8 M8 8h3.5a1.5 1.5 0 0 1 0 3H8.5 M8 13h3.5"/>',
+  card: '<path d="M3 6h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z M2 9h16"/>',
+  store: '<path d="M3 8l1-4h12l1 4 M3 8v8h14V8 M7 8a2 2 0 0 0 4 0 M11 8a2 2 0 0 0 4 0"/>',
+  icecream: '<path d="M10 3a4 4 0 0 1 4 4H6a4 4 0 0 1 4-4z M7 7l3 10 3-10"/>',
+  burger: '<path d="M3 8a7 3 0 0 1 14 0z M3 8h14 M3 11h14 M3 14h14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>',
+  plate: '<path d="M10 3a7 7 0 1 0 0.01 0 M10 6a4 4 0 1 0 0.01 0"/>',
+  suitcase: '<path d="M4 8h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z M7 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+  candy: '<path d="M6 10 L3 7 V13 Z M14 10 L17 7 V13 Z M8 10a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/>'
+};
+
+const ITEM_ICON_MAP = {
+  'gasolina': ['gas','coral'],
+  'arriendo': ['house','amber'],
+  'comida para gatos': ['cat','teal'],
+  'arena para gatos': ['tray','teal'],
+  'comida diaria': ['bowl','green'],
+  'mercado': ['cart','green'],
+  'aceite para la moto': ['oil','coral'],
+  'productos de aseo': ['spray','blue'],
+  'lichigo': ['tag','text-dim'],
+  'prestamos': ['coin','amber'],
+  'tarjeta de credito': ['card','blue'],
+  'kiosko': ['store','purple'],
+  'helado': ['icecream','pink'],
+  'hamburguesas o perro': ['burger','coral'],
+  'arepas': ['plate','amber'],
+  'viajes': ['suitcase','teal'],
+  'dulces': ['candy','pink']
+};
+
+function getIcon(name){
+  const key = name.trim().toLowerCase();
+  const [iconKey, color] = ITEM_ICON_MAP[key] || ['tag','text-dim'];
+  const path = ICON_PATHS[iconKey] || ICON_PATHS.tag;
+  const colorVar = color === 'text-dim' ? 'var(--text-dim)' : `var(--${color})`;
+  const bg = color === 'text-dim' ? 'rgba(155,149,133,0.12)' : `color-mix(in srgb, ${colorVar} 18%, transparent)`;
+  const svg = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+  return `<span class="icon-wrap" style="background:${bg}; color:${colorVar};">${svg}</span>`;
+}
+
+async function loadData(){
+  for(const t of TABS){
+    try{
+      const r = await window.storage.get('movs:'+t);
+      data[t] = r ? JSON.parse(r.value) : [];
+    }catch(e){ data[t] = []; }
+    try{
+      const r2 = await window.storage.get('items:'+t);
+      items[t] = r2 ? JSON.parse(r2.value) : [...DEFAULT_ITEMS[t]];
+    }catch(e){ items[t] = [...DEFAULT_ITEMS[t]]; }
+    try{
+      const r3 = await window.storage.get('initialBalance:'+t);
+      initialBalance[t] = r3 ? parseFloat(r3.value) || 0 : 0;
+    }catch(e){ initialBalance[t] = 0; }
+  }
+  populateFilters();
+  renderMenu();
+  render();
+}
+
+async function saveTab(t){
+  try{ await window.storage.set('movs:'+t, JSON.stringify(data[t])); }
+  catch(e){ console.error('Error guardando', e); }
+}
+
+async function saveInitialBalance(t){
+  try{ await window.storage.set('initialBalance:'+t, String(initialBalance[t])); }
+  catch(e){ console.error('Error guardando saldo inicial', e); }
+}
+
+async function saveItems(t){
+  try{ await window.storage.set('items:'+t, JSON.stringify(items[t])); }
+  catch(e){ console.error('Error guardando lista', e); }
+}
+
+document.querySelectorAll('.tab').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    el.classList.add('active');
+    currentTab = el.dataset.tab;
+    document.getElementById('selectBtnInner').textContent = 'Elegir ítem';
+    populateFilters();
+    renderMenu();
+    render();
+  });
+});
+
+const fMonth = document.getElementById('filterMonth');
+const filterDayBtn = document.getElementById('filterDayBtn');
+const dayModalBackdrop = document.getElementById('dayModalBackdrop');
+const dayModalGrid = document.getElementById('dayModalGrid');
+const dayModalClose = document.getElementById('dayModalClose');
+let selectedDay = '';
+
+fMonth.addEventListener('change', ()=>{ selectedDay=''; populateDays(); render(); });
+
+function openDayModal(){ dayModalBackdrop.classList.add('open'); }
+function closeDayModal(){ dayModalBackdrop.classList.remove('open'); }
+filterDayBtn.addEventListener('click', openDayModal);
+dayModalClose.addEventListener('click', closeDayModal);
+dayModalBackdrop.addEventListener('click', (e)=>{ if(e.target === dayModalBackdrop) closeDayModal(); });
+
+function populateFilters(){
+  populateMonths();
+  populateDays();
+}
+
+function daysInMonth(year, monthIndex){
+  return new Date(year, monthIndex+1, 0).getDate();
+}
+
+function populateMonths(){
+  const year = new Date().getFullYear();
+  const monthMap = new Map();
+  for(let m=0;m<12;m++){
+    const val = `${year}-${String(m+1).padStart(2,'0')}`;
+    monthMap.set(val, new Date(year, m, 1).toLocaleDateString('es-ES',{month:'long'}));
+  }
+  data[currentTab].forEach(mv=>{
+    const val = mv.date.slice(0,7);
+    if(!monthMap.has(val)){
+      const [y,mo] = val.split('-');
+      monthMap.set(val, new Date(y, mo-1, 1).toLocaleDateString('es-ES',{month:'long'}));
+    }
+  });
+  fMonth.innerHTML = '<option value="">Mes</option>' +
+    [...monthMap.keys()].sort().map(v=>`<option value="${v}">${monthMap.get(v)}</option>`).join('');
+}
+
+function populateDays(){
+  let year, monthIndex;
+  if(fMonth.value){
+    const [y,mo] = fMonth.value.split('-');
+    year = +y; monthIndex = +mo - 1;
+  } else {
+    const now = new Date();
+    year = now.getFullYear(); monthIndex = now.getMonth();
+  }
+  const total = daysInMonth(year, monthIndex);
+  const list = [];
+  for(let d=1; d<=total; d++){
+    list.push(`${year}-${String(monthIndex+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  }
+  window.__dayList = list;
+  if(selectedDay && !window.__dayList.includes(selectedDay)) selectedDay = '';
+  updateDayButtonLabel();
+  renderDayModalGrid();
+}
+
+function updateDayButtonLabel(){
+  if(!selectedDay){ filterDayBtn.textContent = 'Días'; return; }
+  filterDayBtn.textContent = new Date(selectedDay+'T00:00').toLocaleDateString('es-ES',{day:'numeric', month:'short'});
+}
+
+function renderDayModalGrid(){
+  const list = window.__dayList || [];
+  let html = `<div class="day-chip all-chip${selectedDay?'':' active'}" data-day="">Todos los días</div>`;
+  html += list.map(d=>{
+    const dayNum = parseInt(d.slice(-2), 10);
+    const active = d===selectedDay ? ' active' : '';
+    return `<div class="day-chip${active}" data-day="${d}">${dayNum}</div>`;
+  }).join('');
+  dayModalGrid.innerHTML = html;
+  dayModalGrid.querySelectorAll('.day-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      selectedDay = chip.dataset.day;
+      updateDayButtonLabel();
+      renderDayModalGrid();
+      closeDayModal();
+      render();
+    });
+  });
+}
+
+const balanceModeSelect = document.getElementById('balanceModeSelect');
+const balanceEditHint = document.getElementById('balanceEditHint');
+
+function updateBalanceModeUI(){
+  if(balanceMode === 'total'){
+    balanceEl.style.cursor = 'default';
+    balanceEditHint.textContent = 'Vista total de las 3 pestañas (no editable)';
+  } else {
+    balanceEl.style.cursor = 'pointer';
+    balanceEditHint.textContent = 'Toca el saldo para poner un monto en efectivo';
+  }
+}
+
+balanceModeSelect.addEventListener('change', ()=>{
+  balanceMode = balanceModeSelect.value;
+  updateBalanceModeUI();
+  render();
+});
+
+const balanceEl = document.getElementById('balance');
+balanceEl.addEventListener('click', ()=>{
+  if(balanceMode === 'total') return;
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.step = '0.01';
+  input.id = 'balanceInput';
+  input.value = initialBalance[currentTab];
+  balanceEl.replaceWith(input);
+  input.focus();
+  input.select();
+
+  async function commit(){
+    const val = parseFloat(input.value);
+    initialBalance[currentTab] = isNaN(val) ? 0 : val;
+    await saveInitialBalance(currentTab);
+    input.replaceWith(balanceEl);
+    render();
+  }
+  input.addEventListener('keydown', e=>{
+    if(e.key === 'Enter'){ e.preventDefault(); commit(); }
+    if(e.key === 'Escape'){ input.replaceWith(balanceEl); }
+  });
+  input.addEventListener('blur', commit);
+});
+
+const selectBtn = document.getElementById('selectBtn');
+const selectBtnInner = document.getElementById('selectBtnInner');
+const selectMenu = document.getElementById('selectMenu');
+const selectWrap = document.getElementById('selectWrap');
+
+selectBtn.addEventListener('click', ()=>{
+  const isOpen = selectMenu.classList.toggle('open');
+  selectBtn.classList.toggle('open', isOpen);
+});
+
+document.addEventListener('click', (e)=>{
+  if(!selectWrap.contains(e.target)){
+    selectMenu.classList.remove('open');
+    selectBtn.classList.remove('open');
+  }
+});
+
+function chooseItem(name){
+  document.getElementById('f-desc').value = name;
+  selectBtnInner.innerHTML = getIcon(name) + `<span>${escapeHtml(name)}</span>`;
+  selectMenu.classList.remove('open');
+  selectBtn.classList.remove('open');
+  document.getElementById('f-amount').focus();
+}
+
+function renderMenu(){
+  const rows = items[currentTab].map(name=>{
+    const safe = escapeHtml(name);
+    return `<div class="menu-row" data-name="${safe}">
+      <div class="menu-row-main" data-name="${safe}">${getIcon(name)}<span class="menu-row-label">${safe}</span></div>
+      <button type="button" class="menu-icon-btn edit-item-btn" data-name="${safe}" title="Editar">&#9998;</button>
+      <button type="button" class="menu-icon-btn del-item-btn" data-name="${safe}" title="Eliminar">&times;</button>
+    </div>`;
+  }).join('');
+  selectMenu.innerHTML = rows + `<div class="menu-add-row" id="menuAddRow">+ Agregar nuevo</div>`;
+
+  selectMenu.querySelectorAll('.menu-row-main').forEach(row=>{
+    row.addEventListener('click', ()=> chooseItem(row.dataset.name));
+  });
+
+  selectMenu.querySelectorAll('.edit-item-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      startEditItem(btn.dataset.name);
+    });
+  });
+
+  selectMenu.querySelectorAll('.del-item-btn').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const name = btn.dataset.name;
+      if(!confirm(`¿Eliminar "${name}" de la lista?`)) return;
+      items[currentTab] = items[currentTab].filter(n=>n!==name);
+      await saveItems(currentTab);
+      renderMenu();
+    });
+  });
+
+  document.getElementById('menuAddRow').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const row = document.getElementById('menuAddRow');
+    row.innerHTML = `<input type="text" class="menu-add-input" id="menuAddInput" placeholder="Nuevo ítem...">`;
+    const input = document.getElementById('menuAddInput');
+    input.focus();
+
+    async function commit(){
+      const val = input.value.trim();
+      if(val){
+        items[currentTab].push(val);
+        await saveItems(currentTab);
+      }
+      renderMenu();
+    }
+    input.addEventListener('keydown', ev=>{
+      if(ev.key === 'Enter'){ ev.preventDefault(); commit(); }
+      if(ev.key === 'Escape'){ renderMenu(); }
+    });
+    input.addEventListener('click', ev=> ev.stopPropagation());
+    input.addEventListener('blur', commit);
+  });
+}
+
+function startEditItem(oldName){
+  const row = selectMenu.querySelector(`.menu-row[data-name="${CSS.escape(oldName)}"]`);
+  if(!row) return;
+  row.innerHTML = `<input type="text" class="menu-add-input" id="menuEditInput" value="${escapeHtml(oldName)}">`;
+  const input = row.querySelector('#menuEditInput');
+  input.focus();
+  input.select();
+
+  async function commit(){
+    const val = input.value.trim();
+    if(val && val !== oldName){
+      const idx = items[currentTab].indexOf(oldName);
+      if(idx !== -1) items[currentTab][idx] = val;
+      data[currentTab].forEach(m=>{ if(m.desc === oldName) m.desc = val; });
+      await saveItems(currentTab);
+      await saveTab(currentTab);
+      if(document.getElementById('f-desc').value === oldName){
+        document.getElementById('f-desc').value = val;
+        selectBtnInner.innerHTML = getIcon(val) + `<span>${escapeHtml(val)}</span>`;
+      }
+    }
+    renderMenu();
+    render();
+  }
+  input.addEventListener('keydown', ev=>{
+    if(ev.key === 'Enter'){ ev.preventDefault(); commit(); }
+    if(ev.key === 'Escape'){ renderMenu(); }
+  });
+  input.addEventListener('click', ev=> ev.stopPropagation());
+  input.addEventListener('blur', commit);
+}
+
+document.getElementById('form').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const desc = document.getElementById('f-desc').value.trim();
+  const amount = parseFloat(document.getElementById('f-amount').value);
+  const type = document.getElementById('f-type').value;
+  let date = document.getElementById('f-date').value;
+  if(!date) date = new Date().toISOString().slice(0,10);
+  if(!desc || isNaN(amount)) return;
+
+  data[currentTab].push({ id: Date.now().toString(), desc, amount, type, date });
+  await saveTab(currentTab);
+  e.target.reset();
+  document.getElementById('f-date').value = todayStr();
+  selectBtnInner.textContent = 'Elegir ítem';
+  populateFilters();
+  render();
+});
+
+async function deleteMov(id){
+  data[currentTab] = data[currentTab].filter(m=>m.id!==id);
+  await saveTab(currentTab);
+  populateFilters();
+  render();
+}
+
+function fmt(n){
+  return '$' + Number(n).toLocaleString('es-CO', {maximumFractionDigits:0});
+}
+
+function render(){
+  const month = fMonth.value;
+  const day = selectedDay;
+  const list = data[currentTab]
+    .filter(m => !month || m.date.slice(0,7) === month)
+    .filter(m => !day || m.date === day)
+    .sort((a,b)=> b.date.localeCompare(a.date));
+
+  let totalIn=0, totalOut=0;
+  list.forEach(m=>{
+    if(m.type==='in') totalIn += m.amount; else totalOut += m.amount;
+  });
+
+  document.getElementById('balance').textContent = balanceMode === 'total'
+    ? fmt(computeTotal())
+    : fmt(initialBalance[currentTab] + totalIn - totalOut);
+  document.getElementById('totalIn').textContent = fmt(totalIn);
+  document.getElementById('totalOut').textContent = fmt(totalOut);
+
+  renderChart(list);
+
+  const movsEl = document.getElementById('movs');
+  if(!list.length){
+    movsEl.innerHTML = '<div class="empty">Sin movimientos en este filtro todavía.</div>';
+    return;
+  }
+  movsEl.innerHTML = list.map(m=>{
+    const fecha = new Date(m.date+'T00:00').toLocaleDateString('es-ES',{day:'numeric', month:'short'});
+    return `<div class="mov">
+      <div class="mov-left">
+        ${getIcon(m.desc)}
+        <div>
+          <div class="mov-desc">${escapeHtml(m.desc)}</div>
+          <div class="mov-meta">${fecha}</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <div class="mov-amount ${m.type}">${m.type==='in'?'+':'-'}${fmt(m.amount)}</div>
+        <button class="del" onclick="deleteMov('${m.id}')">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+const CHART_COLORS = ['#cda15a','#6fae8a','#c96a5a','#5a9c9c','#6b93c9','#9b8ac9','#c98ab0','#c98a5a','#8a7147','#ece7dc'];
+
+function renderChart(list){
+  const chartCard = document.getElementById('chartCard');
+  if(!fMonth.value){ chartCard.style.display = 'none'; return; }
+
+  const outs = list.filter(m => m.type === 'out');
+  if(!outs.length){ chartCard.style.display = 'none'; return; }
+
+  const byDesc = new Map();
+  outs.forEach(m => byDesc.set(m.desc, (byDesc.get(m.desc) || 0) + m.amount));
+  const total = [...byDesc.values()].reduce((a,b)=>a+b, 0);
+  const entries = [...byDesc.entries()].sort((a,b)=> b[1]-a[1]);
+
+  let acc = 0;
+  const stops = entries.map(([name, val], i)=>{
+    const pct = total ? (val/total*100) : 0;
+    const start = acc;
+    acc += pct;
+    return `${CHART_COLORS[i % CHART_COLORS.length]} ${start}% ${acc}%`;
+  });
+  document.getElementById('pieChart').style.background = `conic-gradient(${stops.join(',')})`;
+
+  document.getElementById('chartLegend').innerHTML = entries.map(([name, val], i)=>{
+    const pct = total ? Math.round(val/total*100) : 0;
+    const color = CHART_COLORS[i % CHART_COLORS.length];
+    return `<div class="legend-row">
+      <span class="legend-dot" style="background:${color};"></span>
+      <span class="legend-name">${escapeHtml(name)}</span>
+      <span class="legend-pct">${pct}% · ${fmt(val)}</span>
+    </div>`;
+  }).join('');
+
+  chartCard.style.display = '';
+}
+
+updateBalanceModeUI();
+document.getElementById('f-date').value = todayStr();
+loadData();
+</script>
+
+</body>
+</html>
