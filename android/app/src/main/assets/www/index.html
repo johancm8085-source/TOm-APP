@@ -18,18 +18,18 @@
     --panel: #1c1a16;
     --panel-2: #242119;
     --border: rgba(214,178,110,0.16);
-    --gold: #cda15a;
-    --gold-dim: #8a7147;
-    --text: #ece7dc;
-    --text-dim: #9b9585;
-    --green: #6fae8a;
-    --red: #c96a5a;
-    --teal: #5a9c9c;
-    --blue: #6b93c9;
-    --purple: #9b8ac9;
-    --pink: #c98ab0;
-    --coral: #c98a5a;
-    --amber: #cda15a;
+    --gold: #e8b13d;
+    --gold-dim: #a87a24;
+    --text: #f3efe4;
+    --text-dim: #a39d8c;
+    --green: #3fc481;
+    --red: #e2503e;
+    --teal: #2fbfbf;
+    --blue: #5089e6;
+    --purple: #a86cf0;
+    --pink: #e3609e;
+    --coral: #e87b3e;
+    --amber: #e8b13d;
   }
   *{box-sizing:border-box;}
   body{
@@ -107,6 +107,7 @@
     text-align:left; cursor:pointer;
   }
   .day-filter-btn:hover{ border-color: var(--gold); }
+  .day-filter-btn.active{ border-color: var(--gold); color: var(--gold); background: var(--panel-2); }
   .modal-backdrop{
     display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6);
     align-items:center; justify-content:center; z-index:100; padding:20px;
@@ -225,6 +226,21 @@
     color: var(--gold); border:1px dashed var(--border); border-radius:12px;
   }
   .debt-add-row:hover{ background: var(--panel); }
+  .debt-total-summary{
+    font-family: system-ui, sans-serif; font-size:15px; color:var(--gold); font-weight:600;
+    background: var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:14px; margin-bottom:16px; text-align:center;
+  }
+
+  .icon-picker{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .icon-swatch{
+    width:32px; height:32px; border-radius:9px; border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; background:none; padding:0;
+  }
+  .icon-swatch svg{ width:16px; height:16px; }
+  .icon-swatch.active{ border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+  .icon-picker-btn{ font-size:15px; }
+  .icon-picker-panel{ background: var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:10px; margin:2px 0 6px; }
 
   .debt-modal-field{ margin-bottom:14px; }
   .debt-modal-field label{ display:block; font-size:12.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
@@ -278,6 +294,7 @@
   <div class="filters">
     <select id="filterMonth"><option value="">Mes</option></select>
     <button type="button" class="day-filter-btn" id="filterDayBtn">Días</button>
+    <button type="button" class="day-filter-btn" id="chartToggleBtn">📊 Gráfica</button>
   </div>
 
   <div class="chart-card" id="chartCard" style="display:none;">
@@ -330,6 +347,17 @@
 
   <div class="filters">
     <select id="lunaFilterMonth"><option value="">Mes</option></select>
+    <button type="button" class="day-filter-btn" id="lunaChartToggleBtn">📊 Gráfica</button>
+  </div>
+
+  <div class="debt-total-summary" id="lunaTotalSummary">Debes en total: $0</div>
+
+  <div class="chart-card" id="lunaChartCard" style="display:none;">
+    <div class="items-title">En qué se concentra la deuda</div>
+    <div class="chart-body">
+      <div class="pie" id="lunaPieChart"></div>
+      <div class="chart-legend" id="lunaChartLegend"></div>
+    </div>
   </div>
 
   <div class="items-block">
@@ -402,14 +430,18 @@ const DEFAULT_ITEMS = {
   ahorro: []
 };
 let items = { gastos: [], entretenimiento: [], ahorro: [] };
+let itemIcons = { gastos: {}, entretenimiento: {}, ahorro: {} }; // name -> "iconKey|color"
 let initialBalance = { gastos: 0, entretenimiento: 0, ahorro: 0 };
 let balanceMode = 'saldo';
+let showChart = false;
 
 let appMode = 'tom';
 const DEBT_DEFAULT_ITEMS = ['Mama','Tarjeta','Prestamos','Parqueadero','Servicio','Arriendo'];
 let debtItems = [...DEBT_DEFAULT_ITEMS];
 let debtData = {}; // { [name]: { totalDebt: number, payments: { 'YYYY-MM': number } } }
+let debtIcons = {}; // name -> "iconKey|color"
 let editingDebtName = null;
+let showLunaChart = false;
 
 function todayStr(){
   return new Date().toISOString().slice(0,10);
@@ -473,14 +505,49 @@ const ITEM_ICON_MAP = {
   'servicio': ['spray','teal']
 };
 
-function getIcon(name){
-  const key = name.trim().toLowerCase();
-  const [iconKey, color] = ITEM_ICON_MAP[key] || ['tag','text-dim'];
+function getIcon(name, overrideKey){
+  let iconKey, color;
+  if(overrideKey && overrideKey.includes('|')){
+    [iconKey, color] = overrideKey.split('|');
+  } else {
+    const key = name.trim().toLowerCase();
+    [iconKey, color] = ITEM_ICON_MAP[key] || ['tag','text-dim'];
+  }
   const path = ICON_PATHS[iconKey] || ICON_PATHS.tag;
   const colorVar = color === 'text-dim' ? 'var(--text-dim)' : `var(--${color})`;
   const bg = color === 'text-dim' ? 'rgba(155,149,133,0.12)' : `color-mix(in srgb, ${colorVar} 18%, transparent)`;
   const svg = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
   return `<span class="icon-wrap" style="background:${bg}; color:${colorVar};">${svg}</span>`;
+}
+
+// Pequeño "baúl" de íconos de línea para elegir manualmente al crear/editar un ítem
+const ICON_CHOICES = [
+  ['house','amber'], ['gas','coral'], ['cat','teal'], ['tray','teal'], ['bowl','green'],
+  ['cart','green'], ['oil','coral'], ['spray','blue'], ['tag','text-dim'], ['coin','amber'],
+  ['card','blue'], ['store','purple'], ['icecream','pink'], ['burger','coral'], ['plate','amber'],
+  ['suitcase','teal'], ['candy','pink']
+];
+
+function buildIconPickerHTML(currentOverride){
+  return `<div class="icon-picker">` + ICON_CHOICES.map(([iconKey,color])=>{
+    const key = iconKey + '|' + color;
+    const active = (currentOverride === key) ? ' active' : '';
+    const colorVar = color === 'text-dim' ? 'var(--text-dim)' : `var(--${color})`;
+    const bg = color === 'text-dim' ? 'rgba(155,149,133,0.12)' : `color-mix(in srgb, ${colorVar} 18%, transparent)`;
+    const svg = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[iconKey]}</svg>`;
+    return `<button type="button" class="icon-swatch${active}" data-icon="${key}" style="background:${bg}; color:${colorVar};">${svg}</button>`;
+  }).join('') + `</div>`;
+}
+
+function wireIconPicker(container){
+  container.querySelectorAll('.icon-swatch').forEach(btn=>{
+    btn.addEventListener('mousedown', e=> e.preventDefault());
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      container.querySelectorAll('.icon-swatch').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
 }
 
 async function loadData(){
@@ -497,6 +564,10 @@ async function loadData(){
       const r3 = await window.storage.get('initialBalance:'+t);
       initialBalance[t] = r3 ? parseFloat(r3.value) || 0 : 0;
     }catch(e){ initialBalance[t] = 0; }
+    try{
+      const r4 = await window.storage.get('icons:'+t);
+      itemIcons[t] = r4 ? JSON.parse(r4.value) : {};
+    }catch(e){ itemIcons[t] = {}; }
   }
   populateFilters();
   renderMenu();
@@ -516,6 +587,11 @@ async function saveInitialBalance(t){
 async function saveItems(t){
   try{ await window.storage.set('items:'+t, JSON.stringify(items[t])); }
   catch(e){ console.error('Error guardando lista', e); }
+}
+
+async function saveItemIcons(t){
+  try{ await window.storage.set('icons:'+t, JSON.stringify(itemIcons[t])); }
+  catch(e){ console.error('Error guardando iconos', e); }
 }
 
 document.querySelectorAll('.tab').forEach(el=>{
@@ -544,6 +620,13 @@ function closeDayModal(){ dayModalBackdrop.classList.remove('open'); }
 filterDayBtn.addEventListener('click', openDayModal);
 dayModalClose.addEventListener('click', closeDayModal);
 dayModalBackdrop.addEventListener('click', (e)=>{ if(e.target === dayModalBackdrop) closeDayModal(); });
+
+const chartToggleBtn = document.getElementById('chartToggleBtn');
+chartToggleBtn.addEventListener('click', ()=>{
+  showChart = !showChart;
+  chartToggleBtn.classList.toggle('active', showChart);
+  render();
+});
 
 function populateFilters(){
   populateMonths();
@@ -681,7 +764,7 @@ document.addEventListener('click', (e)=>{
 
 function chooseItem(name){
   document.getElementById('f-desc').value = name;
-  selectBtnInner.innerHTML = getIcon(name) + `<span>${escapeHtml(name)}</span>`;
+  selectBtnInner.innerHTML = getIcon(name, itemIcons[currentTab][name]) + `<span>${escapeHtml(name)}</span>`;
   selectMenu.classList.remove('open');
   selectBtn.classList.remove('open');
   document.getElementById('f-amount').focus();
@@ -691,7 +774,8 @@ function renderMenu(){
   const rows = items[currentTab].map(name=>{
     const safe = escapeHtml(name);
     return `<div class="menu-row" data-name="${safe}">
-      <div class="menu-row-main" data-name="${safe}">${getIcon(name)}<span class="menu-row-label">${safe}</span></div>
+      <div class="menu-row-main" data-name="${safe}">${getIcon(name, itemIcons[currentTab][name])}<span class="menu-row-label">${safe}</span></div>
+      <button type="button" class="menu-icon-btn icon-picker-btn" data-name="${safe}" title="Ícono">🎨</button>
       <button type="button" class="menu-icon-btn edit-item-btn" data-name="${safe}" title="Editar">&#9998;</button>
       <button type="button" class="menu-icon-btn del-item-btn" data-name="${safe}" title="Eliminar">&times;</button>
     </div>`;
@@ -700,6 +784,30 @@ function renderMenu(){
 
   selectMenu.querySelectorAll('.menu-row-main').forEach(row=>{
     row.addEventListener('click', ()=> chooseItem(row.dataset.name));
+  });
+
+  selectMenu.querySelectorAll('.icon-picker-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const row = btn.closest('.menu-row');
+      const name = btn.dataset.name;
+      const existing = row.querySelector('.icon-picker-panel');
+      if(existing){ existing.remove(); return; }
+      selectMenu.querySelectorAll('.icon-picker-panel').forEach(p=>p.remove());
+      const panel = document.createElement('div');
+      panel.className = 'icon-picker-panel';
+      panel.innerHTML = buildIconPickerHTML(itemIcons[currentTab][name] || '');
+      row.insertAdjacentElement('afterend', panel);
+      wireIconPicker(panel);
+      panel.querySelectorAll('.icon-swatch').forEach(sw=>{
+        sw.addEventListener('click', async ()=>{
+          itemIcons[currentTab][name] = sw.dataset.icon;
+          await saveItemIcons(currentTab);
+          renderMenu();
+          render();
+        });
+      });
+    });
   });
 
   selectMenu.querySelectorAll('.edit-item-btn').forEach(btn=>{
@@ -715,7 +823,9 @@ function renderMenu(){
       const name = btn.dataset.name;
       if(!confirm(`¿Eliminar "${name}" de la lista?`)) return;
       items[currentTab] = items[currentTab].filter(n=>n!==name);
+      delete itemIcons[currentTab][name];
       await saveItems(currentTab);
+      await saveItemIcons(currentTab);
       renderMenu();
     });
   });
@@ -723,15 +833,22 @@ function renderMenu(){
   document.getElementById('menuAddRow').addEventListener('click', (e)=>{
     e.stopPropagation();
     const row = document.getElementById('menuAddRow');
-    row.innerHTML = `<input type="text" class="menu-add-input" id="menuAddInput" placeholder="Nuevo ítem...">`;
+    row.innerHTML = `<div style="flex:1; min-width:0;">
+      <input type="text" class="menu-add-input" id="menuAddInput" placeholder="Nuevo ítem...">
+      ${buildIconPickerHTML('')}
+    </div>`;
     const input = document.getElementById('menuAddInput');
     input.focus();
+    wireIconPicker(row);
 
     async function commit(){
       const val = input.value.trim();
       if(val){
         items[currentTab].push(val);
+        const chosen = row.querySelector('.icon-swatch.active');
+        if(chosen) itemIcons[currentTab][val] = chosen.dataset.icon;
         await saveItems(currentTab);
+        await saveItemIcons(currentTab);
       }
       renderMenu();
     }
@@ -758,11 +875,16 @@ function startEditItem(oldName){
       const idx = items[currentTab].indexOf(oldName);
       if(idx !== -1) items[currentTab][idx] = val;
       data[currentTab].forEach(m=>{ if(m.desc === oldName) m.desc = val; });
+      if(itemIcons[currentTab][oldName]){
+        itemIcons[currentTab][val] = itemIcons[currentTab][oldName];
+        delete itemIcons[currentTab][oldName];
+        await saveItemIcons(currentTab);
+      }
       await saveItems(currentTab);
       await saveTab(currentTab);
       if(document.getElementById('f-desc').value === oldName){
         document.getElementById('f-desc').value = val;
-        selectBtnInner.innerHTML = getIcon(val) + `<span>${escapeHtml(val)}</span>`;
+        selectBtnInner.innerHTML = getIcon(val, itemIcons[currentTab][val]) + `<span>${escapeHtml(val)}</span>`;
       }
     }
     renderMenu();
@@ -835,7 +957,7 @@ function render(){
     const fecha = new Date(m.date+'T00:00').toLocaleDateString('es-ES',{day:'numeric', month:'short'});
     return `<div class="mov">
       <div class="mov-left">
-        ${getIcon(m.desc)}
+        ${getIcon(m.desc, itemIcons[currentTab][m.desc])}
         <div>
           <div class="mov-desc">${escapeHtml(m.desc)}</div>
           <div class="mov-meta">${fecha}</div>
@@ -849,11 +971,11 @@ function render(){
   }).join('');
 }
 
-const CHART_COLORS = ['#cda15a','#6fae8a','#c96a5a','#5a9c9c','#6b93c9','#9b8ac9','#c98ab0','#c98a5a','#8a7147','#ece7dc'];
+const CHART_COLORS = ['#e8b13d','#3fc481','#e2503e','#2fbfbf','#5089e6','#a86cf0','#e3609e','#e87b3e','#a87a24','#f3efe4'];
 
 function renderChart(list){
   const chartCard = document.getElementById('chartCard');
-  if(!fMonth.value){ chartCard.style.display = 'none'; return; }
+  if(!showChart){ chartCard.style.display = 'none'; return; }
 
   const outs = list.filter(m => m.type === 'out');
   if(!outs.length){ chartCard.style.display = 'none'; return; }
@@ -898,6 +1020,10 @@ async function loadDebts(){
     const r2 = await window.storage.get('luna:data');
     debtData = r2 ? JSON.parse(r2.value) : {};
   }catch(e){ debtData = {}; }
+  try{
+    const r3 = await window.storage.get('luna:icons');
+    debtIcons = r3 ? JSON.parse(r3.value) : {};
+  }catch(e){ debtIcons = {}; }
   debtItems.forEach(name=>{ if(!debtData[name]) debtData[name] = { totalDebt: 0, payments: {} }; });
 }
 
@@ -909,6 +1035,11 @@ async function saveDebtItems(){
 async function saveDebtData(){
   try{ await window.storage.set('luna:data', JSON.stringify(debtData)); }
   catch(e){ console.error('Error guardando datos de pendientes', e); }
+}
+
+async function saveDebtIcons(){
+  try{ await window.storage.set('luna:icons', JSON.stringify(debtIcons)); }
+  catch(e){ console.error('Error guardando iconos de pendientes', e); }
 }
 
 function populateLunaMonths(selectEl){
@@ -934,6 +1065,15 @@ function populateLunaMonths(selectEl){
 function renderDebtList(){
   const month = lunaFilterMonth.value || currentMonthKey();
   const listEl = document.getElementById('debtList');
+  let totalOwed = 0;
+  debtItems.forEach(name=>{
+    const d = debtData[name] || { totalDebt: 0, payments: {} };
+    const paidTotal = Object.values(d.payments).reduce((a,b)=>a+b, 0);
+    totalOwed += Math.max(0, d.totalDebt - paidTotal);
+  });
+  document.getElementById('lunaTotalSummary').textContent = 'Debes en total: ' + fmt(totalOwed);
+  renderLunaChart();
+
   if(!debtItems.length){
     listEl.innerHTML = '<div class="empty">Aún no hay pendientes agregados.</div>';
     return;
@@ -947,12 +1087,13 @@ function renderDebtList(){
     const safe = escapeHtml(name);
     return `<div class="debt-row" style="border-left-color:${color};" data-name="${safe}">
       <div class="debt-row-main" data-name="${safe}">
-        ${getIcon(name)}
+        ${getIcon(name, debtIcons[name])}
         <div class="debt-info">
           <div class="debt-name">${safe}</div>
           <div class="debt-meta">Deuda: ${fmt(d.totalDebt)} · Abono mes: ${fmt(monthPayment)} · <span class="pct" style="color:${color};">${Math.round(pct*100)}%</span></div>
         </div>
       </div>
+      <button type="button" class="menu-icon-btn icon-picker-btn" data-name="${safe}" title="Ícono">🎨</button>
       <button type="button" class="menu-icon-btn edit-debt-btn" data-name="${safe}" title="Editar nombre">&#9998;</button>
       <button type="button" class="menu-icon-btn del-debt-btn" data-name="${safe}" title="Eliminar">&times;</button>
     </div>`;
@@ -960,6 +1101,28 @@ function renderDebtList(){
 
   listEl.querySelectorAll('.debt-row-main').forEach(row=>{
     row.addEventListener('click', ()=> openDebtModal(row.dataset.name));
+  });
+  listEl.querySelectorAll('.icon-picker-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const row = btn.closest('.debt-row');
+      const name = btn.dataset.name;
+      const existing = row.querySelector('.icon-picker-panel');
+      if(existing){ existing.remove(); return; }
+      listEl.querySelectorAll('.icon-picker-panel').forEach(p=>p.remove());
+      const panel = document.createElement('div');
+      panel.className = 'icon-picker-panel';
+      panel.innerHTML = buildIconPickerHTML(debtIcons[name] || '');
+      row.insertAdjacentElement('afterend', panel);
+      wireIconPicker(panel);
+      panel.querySelectorAll('.icon-swatch').forEach(sw=>{
+        sw.addEventListener('click', async ()=>{
+          debtIcons[name] = sw.dataset.icon;
+          await saveDebtIcons();
+          renderDebtList();
+        });
+      });
+    });
   });
   listEl.querySelectorAll('.edit-debt-btn').forEach(btn=>{
     btn.addEventListener('click', (e)=>{ e.stopPropagation(); startEditDebtName(btn.dataset.name); });
@@ -971,8 +1134,10 @@ function renderDebtList(){
       if(!confirm(`¿Eliminar "${name}" de los pendientes?`)) return;
       debtItems = debtItems.filter(n=>n!==name);
       delete debtData[name];
+      delete debtIcons[name];
       await saveDebtItems();
       await saveDebtData();
+      await saveDebtIcons();
       renderDebtList();
     });
   });
@@ -993,8 +1158,10 @@ function startEditDebtName(oldName){
       if(idx !== -1) debtItems[idx] = val;
       debtData[val] = debtData[oldName];
       delete debtData[oldName];
+      if(debtIcons[oldName]){ debtIcons[val] = debtIcons[oldName]; delete debtIcons[oldName]; }
       await saveDebtItems();
       await saveDebtData();
+      await saveDebtIcons();
     }
     renderDebtList();
   }
@@ -1012,17 +1179,24 @@ function resetDebtAddRow(){
 
 document.getElementById('debtAddRow').addEventListener('click', (e)=>{
   const row = document.getElementById('debtAddRow');
-  row.innerHTML = `<input type="text" class="menu-add-input" id="debtAddInput" placeholder="Nuevo pendiente...">`;
+  row.innerHTML = `<div style="flex:1; min-width:0;">
+    <input type="text" class="menu-add-input" id="debtAddInput" placeholder="Nuevo pendiente...">
+    ${buildIconPickerHTML('')}
+  </div>`;
   const input = document.getElementById('debtAddInput');
   input.focus();
+  wireIconPicker(row);
 
   async function commit(){
     const val = input.value.trim();
     if(val && !debtItems.includes(val)){
       debtItems.push(val);
       debtData[val] = { totalDebt: 0, payments: {} };
+      const chosen = row.querySelector('.icon-swatch.active');
+      if(chosen) debtIcons[val] = chosen.dataset.icon;
       await saveDebtItems();
       await saveDebtData();
+      await saveDebtIcons();
     }
     resetDebtAddRow();
     renderDebtList();
@@ -1100,6 +1274,48 @@ document.getElementById('debtModalSave').addEventListener('click', async ()=>{
 
 const lunaFilterMonth = document.getElementById('lunaFilterMonth');
 lunaFilterMonth.addEventListener('change', renderDebtList);
+
+const lunaChartToggleBtn = document.getElementById('lunaChartToggleBtn');
+lunaChartToggleBtn.addEventListener('click', ()=>{
+  showLunaChart = !showLunaChart;
+  lunaChartToggleBtn.classList.toggle('active', showLunaChart);
+  renderLunaChart();
+});
+
+function renderLunaChart(){
+  const chartCard = document.getElementById('lunaChartCard');
+  if(!showLunaChart){ chartCard.style.display = 'none'; return; }
+
+  const entries = debtItems.map(name=>{
+    const d = debtData[name] || { totalDebt: 0, payments: {} };
+    const paidTotal = Object.values(d.payments).reduce((a,b)=>a+b, 0);
+    return [name, Math.max(0, d.totalDebt - paidTotal)];
+  }).filter(([,val])=> val > 0).sort((a,b)=> b[1]-a[1]);
+
+  if(!entries.length){ chartCard.style.display = 'none'; return; }
+
+  const total = entries.reduce((a,[,v])=>a+v, 0);
+  let acc = 0;
+  const stops = entries.map(([name, val], i)=>{
+    const pct = total ? (val/total*100) : 0;
+    const start = acc;
+    acc += pct;
+    return `${CHART_COLORS[i % CHART_COLORS.length]} ${start}% ${acc}%`;
+  });
+  document.getElementById('lunaPieChart').style.background = `conic-gradient(${stops.join(',')})`;
+
+  document.getElementById('lunaChartLegend').innerHTML = entries.map(([name, val], i)=>{
+    const pct = total ? Math.round(val/total*100) : 0;
+    const color = CHART_COLORS[i % CHART_COLORS.length];
+    return `<div class="legend-row">
+      <span class="legend-dot" style="background:${color};"></span>
+      <span class="legend-name">${escapeHtml(name)}</span>
+      <span class="legend-pct">${pct}% · ${fmt(val)}</span>
+    </div>`;
+  }).join('');
+
+  chartCard.style.display = '';
+}
 
 const appModeSelect = document.getElementById('appModeSelect');
 const tomSection = document.getElementById('tomSection');
