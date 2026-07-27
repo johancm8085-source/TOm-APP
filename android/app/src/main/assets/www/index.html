@@ -33,35 +33,41 @@
   }
   *{box-sizing:border-box;}
   body{
-    margin:0; font-family: 'Georgia', 'Times New Roman', serif;
+    margin:0; font-family: 'Georgia', 'Times New Roman', serif; font-size:16px;
     background: var(--bg); color: var(--text);
-    min-height:100vh; padding: 60px 16px 60px; position:relative;
+    min-height:100vh; padding: 64px 18px 70px; position:relative;
   }
   .logo{
     position:absolute; top:18px; left:18px;
-    font-family: system-ui, sans-serif; font-size:14px; font-weight:700;
+    font-family: system-ui, sans-serif; font-size:15px; font-weight:700;
     letter-spacing:2px; color: var(--gold);
-    border:1px solid var(--border); border-radius:8px; padding:5px 10px;
+    border:1px solid var(--border); border-radius:8px; padding:6px 11px;
+  }
+  #appModeSelect{
+    position:absolute; top:18px; left:100px;
+    background: var(--panel); color: var(--gold); border:1px solid var(--border);
+    border-radius:8px; padding:6px 10px; font-size:13px; font-family: system-ui, sans-serif;
+    letter-spacing:0.3px;
   }
   .tabs{
-    display:flex; gap:6px; max-width:520px; margin:0 auto 18px; border-bottom:1px solid var(--border);
+    display:flex; gap:6px; max-width:560px; margin:0 auto 22px; border-bottom:1px solid var(--border);
   }
   .tab{
-    flex:1; text-align:center; padding:10px 6px; cursor:pointer;
-    color: var(--text-dim); font-size:14px; letter-spacing:0.3px;
+    flex:1; text-align:center; padding:13px 6px; cursor:pointer;
+    color: var(--text-dim); font-size:15px; letter-spacing:0.3px;
     border-bottom:2px solid transparent; transition: color .2s, border-color .2s;
     font-family: system-ui, sans-serif;
   }
   .tab.active{ color: var(--gold); border-color: var(--gold); }
-  .wrap{ max-width:520px; margin:0 auto; }
+  .wrap{ max-width:560px; margin:0 auto; }
   .balance-card{
     background: linear-gradient(180deg, var(--panel-2), var(--panel));
-    border:1px solid var(--border); border-radius:14px; padding:20px; text-align:center; margin-bottom:18px;
+    border:1px solid var(--border); border-radius:16px; padding:26px 22px; text-align:center; margin-bottom:22px;
   }
-  .balance-label{ font-size:12px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; font-family: system-ui, sans-serif;}
-  .balance-sub-label{ font-size:13px; color:var(--gold); margin-top:10px; font-family: system-ui, sans-serif; letter-spacing:0.5px;}
-  .balance-amount{ font-size:34px; margin-top:4px; color: var(--gold); cursor:pointer; display:inline-flex; align-items:center; gap:8px; justify-content:center; }
-  .balance-edit-hint{ font-size:11px; color:var(--text-dim); margin-top:2px; font-family: system-ui, sans-serif; }
+  .balance-label{ font-size:13px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; font-family: system-ui, sans-serif;}
+  .balance-sub-label{ font-size:14px; color:var(--gold); margin-top:10px; font-family: system-ui, sans-serif; letter-spacing:0.5px;}
+  .balance-amount{ font-size:44px; margin-top:6px; color: var(--gold); cursor:pointer; display:inline-flex; align-items:center; gap:8px; justify-content:center; }
+  .balance-edit-hint{ font-size:12px; color:var(--text-dim); margin-top:4px; font-family: system-ui, sans-serif; }
   .balance-edit-hint i{ font-style:normal; }
   #balanceInput{
     font-size:28px; text-align:center; background: var(--panel-2); color:var(--gold);
@@ -74,30 +80,30 @@
 
   #balanceModeSelect{
     flex:none; background:transparent; color:var(--gold); border:1px solid var(--border);
-    border-radius:6px; padding:2px 6px; font-size:12px; margin-top:10px; font-family: system-ui, sans-serif;
+    border-radius:6px; padding:3px 8px; font-size:13px; margin-top:10px; font-family: system-ui, sans-serif;
     letter-spacing:0.5px; text-align:center;
   }
 
   .chart-card{
     background: linear-gradient(180deg, var(--panel-2), var(--panel));
-    border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:16px; font-family: system-ui, sans-serif;
+    border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:20px; font-family: system-ui, sans-serif;
   }
-  .chart-body{ display:flex; align-items:center; gap:16px; margin-top:8px; }
-  .pie{ width:100px; height:100px; border-radius:50%; flex:0 0 100px; }
-  .chart-legend{ flex:1; display:flex; flex-direction:column; gap:6px; font-size:12.5px; min-width:0; }
+  .chart-body{ display:flex; align-items:center; gap:18px; margin-top:10px; }
+  .pie{ width:120px; height:120px; border-radius:50%; flex:0 0 120px; }
+  .chart-legend{ flex:1; display:flex; flex-direction:column; gap:8px; font-size:14px; min-width:0; }
   .legend-row{ display:flex; align-items:center; gap:8px; }
-  .legend-dot{ width:10px; height:10px; border-radius:3px; flex:0 0 10px; }
+  .legend-dot{ width:11px; height:11px; border-radius:3px; flex:0 0 11px; }
   .legend-name{ flex:1; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .legend-pct{ color:var(--text-dim); flex:0 0 auto; }
 
-  .filters{ display:flex; gap:8px; margin-bottom:16px; font-family: system-ui, sans-serif;}
+  .filters{ display:flex; gap:10px; margin-bottom:20px; font-family: system-ui, sans-serif;}
   select{
     flex:1; background: var(--panel); color: var(--text); border:1px solid var(--border);
-    border-radius:8px; padding:8px 10px; font-size:13px; font-family: system-ui, sans-serif;
+    border-radius:10px; padding:12px 14px; font-size:15px; font-family: system-ui, sans-serif;
   }
   .day-filter-btn{
     flex:1; background: var(--panel); color: var(--text); border:1px solid var(--border);
-    border-radius:8px; padding:8px 10px; font-size:13px; font-family: system-ui, sans-serif;
+    border-radius:10px; padding:12px 14px; font-size:15px; font-family: system-ui, sans-serif;
     text-align:left; cursor:pointer;
   }
   .day-filter-btn:hover{ border-color: var(--gold); }
@@ -126,21 +132,21 @@
   .day-chip.active{ background: var(--gold-dim); color: var(--bg); border-color:var(--gold-dim); }
   .day-chip.all-chip{ grid-column: 1 / -1; color:var(--gold); }
 
-  .items-block{ margin-bottom:16px; font-family: system-ui, sans-serif; position:relative; }
-  .items-title{ font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+  .items-block{ margin-bottom:20px; font-family: system-ui, sans-serif; position:relative; }
+  .items-title{ font-size:13px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
   .select-wrap{ position:relative; }
   .select-btn{
     width:100%; display:flex; align-items:center; justify-content:space-between;
     background: var(--panel); border:1px solid var(--border); color:var(--text);
-    border-radius:10px; padding:10px 12px; font-size:14px; cursor:pointer; font-family: system-ui, sans-serif;
+    border-radius:12px; padding:14px 16px; font-size:16px; cursor:pointer; font-family: system-ui, sans-serif;
   }
   .select-btn-inner{ display:flex; align-items:center; gap:10px; }
   .select-btn .chevron{ color:var(--text-dim); transition: transform .15s; }
   .select-btn.open .chevron{ transform: rotate(180deg); }
   .icon-wrap{
-    width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; flex:0 0 26px;
+    width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex:0 0 32px;
   }
-  .icon-wrap svg{ width:16px; height:16px; }
+  .icon-wrap svg{ width:18px; height:18px; }
   .select-menu{
     display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:20;
     background: var(--panel-2); border:1px solid var(--border); border-radius:10px;
@@ -148,65 +154,104 @@
   }
   .select-menu.open{ display:block; }
   .menu-row{
-    display:flex; align-items:center; gap:4px; padding:6px 8px; font-size:13.5px;
+    display:flex; align-items:center; gap:4px; padding:10px 10px; font-size:15px;
   }
   .menu-row:hover{ background: var(--panel); }
-  .menu-row-main{ display:flex; align-items:center; gap:10px; flex:1; min-width:0; cursor:pointer; padding:3px 4px; }
+  .menu-row-main{ display:flex; align-items:center; gap:10px; flex:1; min-width:0; cursor:pointer; padding:4px 4px; }
   .menu-row-label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .menu-icon-btn{
-    background:none; border:none; color:var(--text-dim); font-size:14px; cursor:pointer;
-    padding:4px 6px; flex:0 0 auto; line-height:1;
+    background:none; border:none; color:var(--text-dim); font-size:16px; cursor:pointer;
+    padding:6px 8px; flex:0 0 auto; line-height:1;
   }
   .menu-icon-btn:hover{ color:var(--gold); }
   .del-item-btn:hover{ color:var(--red); }
   .menu-add-row{
-    display:flex; align-items:center; gap:10px; padding:9px 12px; cursor:pointer; font-size:13.5px;
+    display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; font-size:15px;
     color: var(--gold); border-top:1px solid var(--border);
   }
   .menu-add-row:hover{ background: var(--panel); }
   .menu-add-input{
     width:100%; background: var(--panel); color:var(--text); border:1px solid var(--border);
-    border-radius:6px; padding:6px 8px; font-size:13px; font-family: system-ui, sans-serif;
+    border-radius:6px; padding:8px 10px; font-size:15px; font-family: system-ui, sans-serif;
   }
 
   form{
-    background: var(--panel); border:1px solid var(--border); border-radius:12px;
-    padding:14px; margin-bottom:18px; display:flex; flex-wrap:wrap; gap:8px; font-family: system-ui, sans-serif;
+    background: var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:18px; margin-bottom:22px; display:flex; flex-wrap:wrap; gap:10px; font-family: system-ui, sans-serif;
   }
   form input, form select{
     background: var(--panel-2); color: var(--text); border:1px solid var(--border);
-    border-radius:8px; padding:9px 10px; font-size:13px;
+    border-radius:10px; padding:13px 12px; font-size:15px;
   }
   #f-desc{ flex:1 1 160px; }
   #f-amount{ flex:0 1 110px; }
   #f-type{ flex:0 1 100px; }
   #f-date{ flex:0 1 140px; }
   button{
-    background: var(--gold-dim); color: var(--bg); border:none; border-radius:8px;
-    padding:9px 16px; font-size:13px; font-weight:600; cursor:pointer; font-family: system-ui, sans-serif;
+    background: var(--gold-dim); color: var(--bg); border:none; border-radius:10px;
+    padding:13px 20px; font-size:15px; font-weight:600; cursor:pointer; font-family: system-ui, sans-serif;
   }
   button:hover{ background: var(--gold); }
 
-  .movs{ display:flex; flex-direction:column; gap:8px; }
+  .movs{ display:flex; flex-direction:column; gap:10px; }
   .mov{
     display:flex; justify-content:space-between; align-items:center;
-    background: var(--panel); border:1px solid var(--border); border-radius:10px;
-    padding:11px 14px; font-family: system-ui, sans-serif;
+    background: var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:14px 16px; font-family: system-ui, sans-serif;
   }
   .mov-left{ display:flex; align-items:center; gap:10px; }
-  .mov-desc{ font-size:14px; }
-  .mov-meta{ font-size:11px; color:var(--text-dim); margin-top:2px; }
-  .mov-amount{ font-size:15px; font-weight:600; }
+  .mov-desc{ font-size:16px; }
+  .mov-meta{ font-size:12px; color:var(--text-dim); margin-top:2px; }
+  .mov-amount{ font-size:17px; font-weight:600; }
   .mov-amount.in{ color: var(--green); }
   .mov-amount.out{ color: var(--red); }
   .del{ background:none; border:none; color:var(--text-dim); font-size:16px; cursor:pointer; padding:0 0 0 10px; }
   .del:hover{ color: var(--red); }
-  .empty{ text-align:center; color:var(--text-dim); padding:30px 0; font-family: system-ui, sans-serif; font-size:13px;}
+  .empty{ text-align:center; color:var(--text-dim); padding:30px 0; font-family: system-ui, sans-serif; font-size:14px;}
+
+  .debt-list{ display:flex; flex-direction:column; gap:10px; margin-bottom:10px; font-family: system-ui, sans-serif; }
+  .debt-row{
+    display:flex; align-items:center; gap:10px;
+    background: var(--panel); border:1px solid var(--border); border-left:4px solid var(--text-dim);
+    border-radius:12px; padding:14px 14px;
+  }
+  .debt-row-main{ display:flex; align-items:center; gap:10px; flex:1; min-width:0; cursor:pointer; }
+  .debt-info{ min-width:0; }
+  .debt-name{ font-size:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .debt-meta{ font-size:12.5px; color:var(--text-dim); margin-top:2px; }
+  .debt-meta .pct{ font-weight:600; }
+  .debt-add-row{
+    display:flex; align-items:center; gap:10px; padding:14px; cursor:pointer; font-size:15px;
+    color: var(--gold); border:1px dashed var(--border); border-radius:12px;
+  }
+  .debt-add-row:hover{ background: var(--panel); }
+
+  .debt-modal-field{ margin-bottom:14px; }
+  .debt-modal-field label{ display:block; font-size:12.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+  .debt-modal-field input, .debt-modal-field select{
+    width:100%; background: var(--panel); color:var(--text); border:1px solid var(--border);
+    border-radius:10px; padding:12px 12px; font-size:15px; font-family: system-ui, sans-serif;
+  }
+  .debt-modal-summary{
+    display:flex; justify-content:space-between; font-size:13.5px; color:var(--text-dim);
+    background: var(--panel); border-radius:10px; padding:10px 12px; margin-bottom:16px;
+  }
+  .debt-modal-summary b{ color:var(--gold); }
+  .debt-modal-actions{ display:flex; gap:10px; }
+  .debt-modal-actions button{ flex:1; }
+  .btn-secondary{ background: var(--panel); color:var(--text); border:1px solid var(--border) !important; }
+  .btn-secondary:hover{ background: var(--panel-2); }
 </style>
 </head>
 <body>
 
 <div class="logo">TOM</div>
+<select id="appModeSelect">
+  <option value="tom">TOM</option>
+  <option value="luna">Luna</option>
+</select>
+
+<div id="tomSection">
 
 <div class="tabs">
   <div class="tab active" data-tab="gastos">Gastos</div>
@@ -279,6 +324,52 @@
 
 </div>
 
+</div>
+
+<div id="lunaSection" class="wrap" style="display:none;">
+
+  <div class="filters">
+    <select id="lunaFilterMonth"><option value="">Mes</option></select>
+  </div>
+
+  <div class="items-block">
+    <div class="items-title">Pendientes por pagar</div>
+    <div class="debt-list" id="debtList"></div>
+    <div class="debt-add-row" id="debtAddRow">+ Agregar pendiente</div>
+  </div>
+
+  <div class="modal-backdrop" id="debtModalBackdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span id="debtModalTitle">Pendiente</span>
+        <button type="button" class="modal-close" id="debtModalClose">×</button>
+      </div>
+
+      <div class="debt-modal-field">
+        <label>Mes</label>
+        <select id="debtModalMonth"></select>
+      </div>
+      <div class="debt-modal-field">
+        <label>Deuda total</label>
+        <input type="number" step="0.01" id="debtModalTotal" placeholder="0">
+      </div>
+      <div class="debt-modal-field">
+        <label>Abono de este mes</label>
+        <input type="number" step="0.01" id="debtModalPayment" placeholder="0">
+      </div>
+      <div class="debt-modal-summary">
+        <span>Abonado en total: <b id="debtModalPaidTotal">$0</b></span>
+        <span>Progreso: <b id="debtModalPct">0%</b></span>
+      </div>
+      <div class="debt-modal-actions">
+        <button type="button" class="btn-secondary" id="debtModalCancel">Cancelar</button>
+        <button type="button" id="debtModalSave">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
 <script>
 // Guardado real en el celular (localStorage), para que la app funcione
 // instalada y sin internet, fuera de Claude.ai.
@@ -313,6 +404,12 @@ const DEFAULT_ITEMS = {
 let items = { gastos: [], entretenimiento: [], ahorro: [] };
 let initialBalance = { gastos: 0, entretenimiento: 0, ahorro: 0 };
 let balanceMode = 'saldo';
+
+let appMode = 'tom';
+const DEBT_DEFAULT_ITEMS = ['Mama','Tarjeta','Prestamos','Parqueadero','Servicio','Arriendo'];
+let debtItems = [...DEBT_DEFAULT_ITEMS];
+let debtData = {}; // { [name]: { totalDebt: number, payments: { 'YYYY-MM': number } } }
+let editingDebtName = null;
 
 function todayStr(){
   return new Date().toISOString().slice(0,10);
@@ -369,7 +466,11 @@ const ITEM_ICON_MAP = {
   'hamburguesas o perro': ['burger','coral'],
   'arepas': ['plate','amber'],
   'viajes': ['suitcase','teal'],
-  'dulces': ['candy','pink']
+  'dulces': ['candy','pink'],
+  'mama': ['tag','pink'],
+  'tarjeta': ['card','blue'],
+  'parqueadero': ['suitcase','coral'],
+  'servicio': ['spray','teal']
 };
 
 function getIcon(name){
@@ -784,9 +885,244 @@ function renderChart(list){
   chartCard.style.display = '';
 }
 
+// --- Luna: pendientes por pagar ---
+
+function currentMonthKey(){ return todayStr().slice(0,7); }
+
+async function loadDebts(){
+  try{
+    const r = await window.storage.get('luna:items');
+    debtItems = r ? JSON.parse(r.value) : [...DEBT_DEFAULT_ITEMS];
+  }catch(e){ debtItems = [...DEBT_DEFAULT_ITEMS]; }
+  try{
+    const r2 = await window.storage.get('luna:data');
+    debtData = r2 ? JSON.parse(r2.value) : {};
+  }catch(e){ debtData = {}; }
+  debtItems.forEach(name=>{ if(!debtData[name]) debtData[name] = { totalDebt: 0, payments: {} }; });
+}
+
+async function saveDebtItems(){
+  try{ await window.storage.set('luna:items', JSON.stringify(debtItems)); }
+  catch(e){ console.error('Error guardando pendientes', e); }
+}
+
+async function saveDebtData(){
+  try{ await window.storage.set('luna:data', JSON.stringify(debtData)); }
+  catch(e){ console.error('Error guardando datos de pendientes', e); }
+}
+
+function populateLunaMonths(selectEl){
+  const year = new Date().getFullYear();
+  const monthMap = new Map();
+  for(let m=0;m<12;m++){
+    const val = `${year}-${String(m+1).padStart(2,'0')}`;
+    monthMap.set(val, new Date(year, m, 1).toLocaleDateString('es-ES',{month:'long'}));
+  }
+  Object.values(debtData).forEach(d=>{
+    Object.keys(d.payments || {}).forEach(val=>{
+      if(!monthMap.has(val)){
+        const [y,mo] = val.split('-');
+        monthMap.set(val, new Date(y, mo-1, 1).toLocaleDateString('es-ES',{month:'long'}));
+      }
+    });
+  });
+  const keys = [...monthMap.keys()].sort();
+  selectEl.innerHTML = keys.map(v=>`<option value="${v}">${monthMap.get(v)}</option>`).join('');
+  return keys;
+}
+
+function renderDebtList(){
+  const month = lunaFilterMonth.value || currentMonthKey();
+  const listEl = document.getElementById('debtList');
+  if(!debtItems.length){
+    listEl.innerHTML = '<div class="empty">Aún no hay pendientes agregados.</div>';
+    return;
+  }
+  listEl.innerHTML = debtItems.map(name=>{
+    const d = debtData[name] || { totalDebt: 0, payments: {} };
+    const paidTotal = Object.values(d.payments).reduce((a,b)=>a+b, 0);
+    const pct = d.totalDebt > 0 ? Math.min(1, paidTotal / d.totalDebt) : 0;
+    const color = `hsl(${Math.round(pct*120)}, 62%, 45%)`;
+    const monthPayment = d.payments[month] || 0;
+    const safe = escapeHtml(name);
+    return `<div class="debt-row" style="border-left-color:${color};" data-name="${safe}">
+      <div class="debt-row-main" data-name="${safe}">
+        ${getIcon(name)}
+        <div class="debt-info">
+          <div class="debt-name">${safe}</div>
+          <div class="debt-meta">Deuda: ${fmt(d.totalDebt)} · Abono mes: ${fmt(monthPayment)} · <span class="pct" style="color:${color};">${Math.round(pct*100)}%</span></div>
+        </div>
+      </div>
+      <button type="button" class="menu-icon-btn edit-debt-btn" data-name="${safe}" title="Editar nombre">&#9998;</button>
+      <button type="button" class="menu-icon-btn del-debt-btn" data-name="${safe}" title="Eliminar">&times;</button>
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('.debt-row-main').forEach(row=>{
+    row.addEventListener('click', ()=> openDebtModal(row.dataset.name));
+  });
+  listEl.querySelectorAll('.edit-debt-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{ e.stopPropagation(); startEditDebtName(btn.dataset.name); });
+  });
+  listEl.querySelectorAll('.del-debt-btn').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const name = btn.dataset.name;
+      if(!confirm(`¿Eliminar "${name}" de los pendientes?`)) return;
+      debtItems = debtItems.filter(n=>n!==name);
+      delete debtData[name];
+      await saveDebtItems();
+      await saveDebtData();
+      renderDebtList();
+    });
+  });
+}
+
+function startEditDebtName(oldName){
+  const row = document.querySelector(`.debt-row[data-name="${CSS.escape(oldName)}"]`);
+  if(!row) return;
+  row.innerHTML = `<input type="text" class="menu-add-input" id="debtEditInput" value="${escapeHtml(oldName)}">`;
+  const input = row.querySelector('#debtEditInput');
+  input.focus();
+  input.select();
+
+  async function commit(){
+    const val = input.value.trim();
+    if(val && val !== oldName && !debtItems.includes(val)){
+      const idx = debtItems.indexOf(oldName);
+      if(idx !== -1) debtItems[idx] = val;
+      debtData[val] = debtData[oldName];
+      delete debtData[oldName];
+      await saveDebtItems();
+      await saveDebtData();
+    }
+    renderDebtList();
+  }
+  input.addEventListener('keydown', ev=>{
+    if(ev.key === 'Enter'){ ev.preventDefault(); commit(); }
+    if(ev.key === 'Escape'){ renderDebtList(); }
+  });
+  input.addEventListener('click', ev=> ev.stopPropagation());
+  input.addEventListener('blur', commit);
+}
+
+function resetDebtAddRow(){
+  document.getElementById('debtAddRow').innerHTML = '+ Agregar pendiente';
+}
+
+document.getElementById('debtAddRow').addEventListener('click', (e)=>{
+  const row = document.getElementById('debtAddRow');
+  row.innerHTML = `<input type="text" class="menu-add-input" id="debtAddInput" placeholder="Nuevo pendiente...">`;
+  const input = document.getElementById('debtAddInput');
+  input.focus();
+
+  async function commit(){
+    const val = input.value.trim();
+    if(val && !debtItems.includes(val)){
+      debtItems.push(val);
+      debtData[val] = { totalDebt: 0, payments: {} };
+      await saveDebtItems();
+      await saveDebtData();
+    }
+    resetDebtAddRow();
+    renderDebtList();
+  }
+  input.addEventListener('keydown', ev=>{
+    if(ev.key === 'Enter'){ ev.preventDefault(); commit(); }
+    if(ev.key === 'Escape'){ resetDebtAddRow(); }
+  });
+  input.addEventListener('click', ev=> ev.stopPropagation());
+  input.addEventListener('blur', commit);
+});
+
+const debtModalBackdrop = document.getElementById('debtModalBackdrop');
+const debtModalMonth = document.getElementById('debtModalMonth');
+const debtModalTotal = document.getElementById('debtModalTotal');
+const debtModalPayment = document.getElementById('debtModalPayment');
+
+function openDebtModal(name){
+  editingDebtName = name;
+  if(!debtData[name]) debtData[name] = { totalDebt: 0, payments: {} };
+  document.getElementById('debtModalTitle').textContent = name;
+  const monthKeys = populateLunaMonths(debtModalMonth);
+  const refMonth = lunaFilterMonth.value || currentMonthKey();
+  debtModalMonth.value = monthKeys.includes(refMonth) ? refMonth : monthKeys[0];
+  fillDebtModalForMonth();
+  debtModalBackdrop.classList.add('open');
+}
+
+function closeDebtModal(){
+  debtModalBackdrop.classList.remove('open');
+  editingDebtName = null;
+}
+
+function fillDebtModalForMonth(){
+  const d = debtData[editingDebtName];
+  const month = debtModalMonth.value;
+  debtModalTotal.value = d.totalDebt || '';
+  debtModalPayment.value = d.payments[month] || '';
+  updateDebtModalSummary();
+}
+
+function updateDebtModalSummary(){
+  const d = debtData[editingDebtName];
+  const month = debtModalMonth.value;
+  const totalDebt = parseFloat(debtModalTotal.value) || 0;
+  const liveMonthVal = parseFloat(debtModalPayment.value) || 0;
+  let paidTotal = 0;
+  Object.keys(d.payments).forEach(k=>{ paidTotal += (k === month ? 0 : d.payments[k]); });
+  paidTotal += liveMonthVal;
+  const pct = totalDebt > 0 ? Math.min(100, Math.round(paidTotal / totalDebt * 100)) : 0;
+  document.getElementById('debtModalPaidTotal').textContent = fmt(paidTotal);
+  document.getElementById('debtModalPct').textContent = pct + '%';
+}
+
+debtModalMonth.addEventListener('change', fillDebtModalForMonth);
+debtModalTotal.addEventListener('input', updateDebtModalSummary);
+debtModalPayment.addEventListener('input', updateDebtModalSummary);
+
+document.getElementById('debtModalClose').addEventListener('click', closeDebtModal);
+document.getElementById('debtModalCancel').addEventListener('click', closeDebtModal);
+debtModalBackdrop.addEventListener('click', (e)=>{ if(e.target === debtModalBackdrop) closeDebtModal(); });
+
+document.getElementById('debtModalSave').addEventListener('click', async ()=>{
+  const name = editingDebtName;
+  if(!name) return;
+  const month = debtModalMonth.value;
+  const totalDebt = parseFloat(debtModalTotal.value) || 0;
+  const payment = parseFloat(debtModalPayment.value) || 0;
+  debtData[name].totalDebt = totalDebt;
+  debtData[name].payments[month] = payment;
+  await saveDebtData();
+  closeDebtModal();
+  renderDebtList();
+});
+
+const lunaFilterMonth = document.getElementById('lunaFilterMonth');
+lunaFilterMonth.addEventListener('change', renderDebtList);
+
+const appModeSelect = document.getElementById('appModeSelect');
+const tomSection = document.getElementById('tomSection');
+const lunaSection = document.getElementById('lunaSection');
+appModeSelect.addEventListener('change', ()=>{
+  appMode = appModeSelect.value;
+  if(appMode === 'luna'){
+    tomSection.style.display = 'none';
+    lunaSection.style.display = '';
+  } else {
+    tomSection.style.display = '';
+    lunaSection.style.display = 'none';
+  }
+});
+
 updateBalanceModeUI();
 document.getElementById('f-date').value = todayStr();
 loadData();
+loadDebts().then(()=>{
+  populateLunaMonths(lunaFilterMonth);
+  lunaFilterMonth.value = currentMonthKey();
+  renderDebtList();
+});
 </script>
 
 </body>
