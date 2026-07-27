@@ -67,6 +67,7 @@
   .balance-label{ font-size:13px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; font-family: system-ui, sans-serif;}
   .balance-sub-label{ font-size:14px; color:var(--gold); margin-top:10px; font-family: system-ui, sans-serif; letter-spacing:0.5px;}
   .balance-amount{ font-size:44px; margin-top:6px; color: var(--gold); cursor:pointer; display:inline-flex; align-items:center; gap:8px; justify-content:center; }
+  .balance-amount.total-mode{ color: #ffffff; }
   .balance-edit-hint{ font-size:12px; color:var(--text-dim); margin-top:4px; font-family: system-ui, sans-serif; }
   .balance-edit-hint i{ font-style:normal; }
   #balanceInput{
@@ -241,6 +242,11 @@
   .icon-swatch.active{ border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
   .icon-picker-btn{ font-size:15px; }
   .icon-picker-panel{ background: var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:10px; margin:2px 0 6px; }
+  .menu-more-btn{ font-size:18px; font-weight:700; }
+  .row-options-actions{ display:flex; gap:8px; margin-top:10px; }
+  .row-options-actions input{ flex:1; }
+  .row-options-actions button{ flex:0 0 auto; padding:8px 12px; background: var(--panel); color:var(--text); }
+  .row-options-actions button:hover{ color: var(--red); }
 
   .debt-modal-field{ margin-bottom:14px; }
   .debt-modal-field label{ display:block; font-size:12.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
@@ -339,6 +345,38 @@
 
   <div class="movs" id="movs"></div>
 
+  <div class="modal-backdrop" id="movModalBackdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>Editar movimiento</span>
+        <button type="button" class="modal-close" id="movModalClose">×</button>
+      </div>
+      <div class="debt-modal-field">
+        <label>Descripción</label>
+        <input type="text" id="movModalDesc">
+      </div>
+      <div class="debt-modal-field">
+        <label>Monto</label>
+        <input type="number" step="0.01" id="movModalAmount">
+      </div>
+      <div class="debt-modal-field">
+        <label>Tipo</label>
+        <select id="movModalType">
+          <option value="out">Gasto</option>
+          <option value="in">Ingreso</option>
+        </select>
+      </div>
+      <div class="debt-modal-field">
+        <label>Fecha</label>
+        <input type="date" id="movModalDate">
+      </div>
+      <div class="debt-modal-actions">
+        <button type="button" class="btn-secondary" id="movModalCancel">Cancelar</button>
+        <button type="button" id="movModalSave">Guardar</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 </div>
@@ -369,9 +407,18 @@
   <div class="modal-backdrop" id="debtModalBackdrop">
     <div class="modal-box">
       <div class="modal-header">
-        <span id="debtModalTitle">Pendiente</span>
-        <button type="button" class="modal-close" id="debtModalClose">×</button>
+        <span style="display:flex; align-items:center; gap:8px; min-width:0;">
+          <span id="debtModalIconPreview"></span>
+          <span id="debtModalTitle">Pendiente</span>
+        </span>
+        <span style="display:flex; align-items:center; gap:2px;">
+          <button type="button" class="menu-icon-btn" id="debtModalIconBtn" title="Ícono">🎨</button>
+          <button type="button" class="menu-icon-btn" id="debtModalRenameBtn" title="Renombrar">&#9998;</button>
+          <button type="button" class="menu-icon-btn" id="debtModalDeleteBtn" title="Eliminar">🗑</button>
+          <button type="button" class="modal-close" id="debtModalClose">×</button>
+        </span>
       </div>
+      <div class="icon-picker" id="debtModalIconPicker" style="display:none; margin-bottom:14px;"></div>
 
       <div class="debt-modal-field">
         <label>Mes</label>
@@ -706,9 +753,11 @@ const balanceEditHint = document.getElementById('balanceEditHint');
 function updateBalanceModeUI(){
   if(balanceMode === 'total'){
     balanceEl.style.cursor = 'default';
+    balanceEl.classList.add('total-mode');
     balanceEditHint.textContent = 'Vista total de las 3 pestañas (no editable)';
   } else {
     balanceEl.style.cursor = 'pointer';
+    balanceEl.classList.remove('total-mode');
     balanceEditHint.textContent = 'Toca el saldo para poner un monto en efectivo';
   }
 }
@@ -762,6 +811,14 @@ document.addEventListener('click', (e)=>{
   }
 });
 
+// Cerrar cualquier selector de íconos abierto si se pincha fuera de él
+document.addEventListener('click', (e)=>{
+  if(e.target.closest('.icon-picker') || e.target.closest('.icon-picker-btn') || e.target.closest('#debtModalIconBtn')) return;
+  document.querySelectorAll('.icon-picker-panel').forEach(p=>p.remove());
+  const modalPicker = document.getElementById('debtModalIconPicker');
+  if(modalPicker) modalPicker.style.display = 'none';
+});
+
 function chooseItem(name){
   document.getElementById('f-desc').value = name;
   selectBtnInner.innerHTML = getIcon(name, itemIcons[currentTab][name]) + `<span>${escapeHtml(name)}</span>`;
@@ -775,9 +832,7 @@ function renderMenu(){
     const safe = escapeHtml(name);
     return `<div class="menu-row" data-name="${safe}">
       <div class="menu-row-main" data-name="${safe}">${getIcon(name, itemIcons[currentTab][name])}<span class="menu-row-label">${safe}</span></div>
-      <button type="button" class="menu-icon-btn icon-picker-btn" data-name="${safe}" title="Ícono">🎨</button>
-      <button type="button" class="menu-icon-btn edit-item-btn" data-name="${safe}" title="Editar">&#9998;</button>
-      <button type="button" class="menu-icon-btn del-item-btn" data-name="${safe}" title="Eliminar">&times;</button>
+      <button type="button" class="menu-icon-btn menu-more-btn" data-name="${safe}" title="Opciones">⋮</button>
     </div>`;
   }).join('');
   selectMenu.innerHTML = rows + `<div class="menu-add-row" id="menuAddRow">+ Agregar nuevo</div>`;
@@ -786,7 +841,7 @@ function renderMenu(){
     row.addEventListener('click', ()=> chooseItem(row.dataset.name));
   });
 
-  selectMenu.querySelectorAll('.icon-picker-btn').forEach(btn=>{
+  selectMenu.querySelectorAll('.menu-more-btn').forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       e.stopPropagation();
       const row = btn.closest('.menu-row');
@@ -796,7 +851,11 @@ function renderMenu(){
       selectMenu.querySelectorAll('.icon-picker-panel').forEach(p=>p.remove());
       const panel = document.createElement('div');
       panel.className = 'icon-picker-panel';
-      panel.innerHTML = buildIconPickerHTML(itemIcons[currentTab][name] || '');
+      panel.innerHTML = buildIconPickerHTML(itemIcons[currentTab][name] || '') +
+        `<div class="row-options-actions">
+          <input type="text" class="menu-add-input" id="rowRenameInput" value="${escapeHtml(name)}">
+          <button type="button" class="menu-icon-btn row-delete-btn" title="Eliminar">🗑</button>
+        </div>`;
       row.insertAdjacentElement('afterend', panel);
       wireIconPicker(panel);
       panel.querySelectorAll('.icon-swatch').forEach(sw=>{
@@ -807,26 +866,44 @@ function renderMenu(){
           render();
         });
       });
-    });
-  });
 
-  selectMenu.querySelectorAll('.edit-item-btn').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      startEditItem(btn.dataset.name);
-    });
-  });
+      const renameInput = panel.querySelector('#rowRenameInput');
+      renameInput.addEventListener('click', ev=> ev.stopPropagation());
+      async function commitRename(){
+        const val = renameInput.value.trim();
+        if(val && val !== name){
+          const idx = items[currentTab].indexOf(name);
+          if(idx !== -1) items[currentTab][idx] = val;
+          data[currentTab].forEach(m=>{ if(m.desc === name) m.desc = val; });
+          if(itemIcons[currentTab][name]){
+            itemIcons[currentTab][val] = itemIcons[currentTab][name];
+            delete itemIcons[currentTab][name];
+            await saveItemIcons(currentTab);
+          }
+          await saveItems(currentTab);
+          await saveTab(currentTab);
+          if(document.getElementById('f-desc').value === name){
+            document.getElementById('f-desc').value = val;
+            selectBtnInner.innerHTML = getIcon(val, itemIcons[currentTab][val]) + `<span>${escapeHtml(val)}</span>`;
+          }
+          renderMenu();
+          render();
+        }
+      }
+      renameInput.addEventListener('keydown', ev=>{
+        if(ev.key === 'Enter'){ ev.preventDefault(); commitRename(); }
+      });
+      renameInput.addEventListener('blur', commitRename);
 
-  selectMenu.querySelectorAll('.del-item-btn').forEach(btn=>{
-    btn.addEventListener('click', async (e)=>{
-      e.stopPropagation();
-      const name = btn.dataset.name;
-      if(!confirm(`¿Eliminar "${name}" de la lista?`)) return;
-      items[currentTab] = items[currentTab].filter(n=>n!==name);
-      delete itemIcons[currentTab][name];
-      await saveItems(currentTab);
-      await saveItemIcons(currentTab);
-      renderMenu();
+      panel.querySelector('.row-delete-btn').addEventListener('click', async (ev)=>{
+        ev.stopPropagation();
+        if(!confirm(`¿Eliminar "${name}" de la lista?`)) return;
+        items[currentTab] = items[currentTab].filter(n=>n!==name);
+        delete itemIcons[currentTab][name];
+        await saveItems(currentTab);
+        await saveItemIcons(currentTab);
+        renderMenu();
+      });
     });
   });
 
@@ -861,43 +938,6 @@ function renderMenu(){
   });
 }
 
-function startEditItem(oldName){
-  const row = selectMenu.querySelector(`.menu-row[data-name="${CSS.escape(oldName)}"]`);
-  if(!row) return;
-  row.innerHTML = `<input type="text" class="menu-add-input" id="menuEditInput" value="${escapeHtml(oldName)}">`;
-  const input = row.querySelector('#menuEditInput');
-  input.focus();
-  input.select();
-
-  async function commit(){
-    const val = input.value.trim();
-    if(val && val !== oldName){
-      const idx = items[currentTab].indexOf(oldName);
-      if(idx !== -1) items[currentTab][idx] = val;
-      data[currentTab].forEach(m=>{ if(m.desc === oldName) m.desc = val; });
-      if(itemIcons[currentTab][oldName]){
-        itemIcons[currentTab][val] = itemIcons[currentTab][oldName];
-        delete itemIcons[currentTab][oldName];
-        await saveItemIcons(currentTab);
-      }
-      await saveItems(currentTab);
-      await saveTab(currentTab);
-      if(document.getElementById('f-desc').value === oldName){
-        document.getElementById('f-desc').value = val;
-        selectBtnInner.innerHTML = getIcon(val, itemIcons[currentTab][val]) + `<span>${escapeHtml(val)}</span>`;
-      }
-    }
-    renderMenu();
-    render();
-  }
-  input.addEventListener('keydown', ev=>{
-    if(ev.key === 'Enter'){ ev.preventDefault(); commit(); }
-    if(ev.key === 'Escape'){ renderMenu(); }
-  });
-  input.addEventListener('click', ev=> ev.stopPropagation());
-  input.addEventListener('blur', commit);
-}
-
 document.getElementById('form').addEventListener('submit', async e=>{
   e.preventDefault();
   const desc = document.getElementById('f-desc').value.trim();
@@ -922,6 +962,47 @@ async function deleteMov(id){
   populateFilters();
   render();
 }
+
+const movModalBackdrop = document.getElementById('movModalBackdrop');
+let editingMovId = null;
+
+function openMovModal(id){
+  const m = data[currentTab].find(x=>x.id===id);
+  if(!m) return;
+  editingMovId = id;
+  document.getElementById('movModalDesc').value = m.desc;
+  document.getElementById('movModalAmount').value = m.amount;
+  document.getElementById('movModalType').value = m.type;
+  document.getElementById('movModalDate').value = m.date;
+  movModalBackdrop.classList.add('open');
+}
+
+function closeMovModal(){
+  movModalBackdrop.classList.remove('open');
+  editingMovId = null;
+}
+
+document.getElementById('movModalClose').addEventListener('click', closeMovModal);
+document.getElementById('movModalCancel').addEventListener('click', closeMovModal);
+movModalBackdrop.addEventListener('click', (e)=>{ if(e.target === movModalBackdrop) closeMovModal(); });
+
+document.getElementById('movModalSave').addEventListener('click', async ()=>{
+  const m = data[currentTab].find(x=>x.id===editingMovId);
+  if(!m) return;
+  const desc = document.getElementById('movModalDesc').value.trim();
+  const amount = parseFloat(document.getElementById('movModalAmount').value);
+  const type = document.getElementById('movModalType').value;
+  const date = document.getElementById('movModalDate').value;
+  if(!desc || isNaN(amount) || !date) return;
+  m.desc = desc;
+  m.amount = amount;
+  m.type = type;
+  m.date = date;
+  await saveTab(currentTab);
+  closeMovModal();
+  populateFilters();
+  render();
+});
 
 function fmt(n){
   return '$' + Number(n).toLocaleString('es-CO', {maximumFractionDigits:0});
@@ -965,7 +1046,8 @@ function render(){
       </div>
       <div style="display:flex; align-items:center;">
         <div class="mov-amount ${m.type}">${m.type==='in'?'+':'-'}${fmt(m.amount)}</div>
-        <button class="del" onclick="deleteMov('${m.id}')">×</button>
+        <button class="del" onclick="openMovModal('${m.id}')" title="Editar">&#9998;</button>
+        <button class="del" onclick="deleteMov('${m.id}')" title="Eliminar">×</button>
       </div>
     </div>`;
   }).join('');
@@ -1086,91 +1168,19 @@ function renderDebtList(){
     const monthPayment = d.payments[month] || 0;
     const safe = escapeHtml(name);
     return `<div class="debt-row" style="border-left-color:${color};" data-name="${safe}">
-      <div class="debt-row-main" data-name="${safe}">
+      <div class="debt-row-main" data-name="${safe}" style="flex:1;">
         ${getIcon(name, debtIcons[name])}
         <div class="debt-info">
           <div class="debt-name">${safe}</div>
           <div class="debt-meta">Deuda: ${fmt(d.totalDebt)} · Abono mes: ${fmt(monthPayment)} · <span class="pct" style="color:${color};">${Math.round(pct*100)}%</span></div>
         </div>
       </div>
-      <button type="button" class="menu-icon-btn icon-picker-btn" data-name="${safe}" title="Ícono">🎨</button>
-      <button type="button" class="menu-icon-btn edit-debt-btn" data-name="${safe}" title="Editar nombre">&#9998;</button>
-      <button type="button" class="menu-icon-btn del-debt-btn" data-name="${safe}" title="Eliminar">&times;</button>
     </div>`;
   }).join('');
 
   listEl.querySelectorAll('.debt-row-main').forEach(row=>{
     row.addEventListener('click', ()=> openDebtModal(row.dataset.name));
   });
-  listEl.querySelectorAll('.icon-picker-btn').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      const row = btn.closest('.debt-row');
-      const name = btn.dataset.name;
-      const existing = row.querySelector('.icon-picker-panel');
-      if(existing){ existing.remove(); return; }
-      listEl.querySelectorAll('.icon-picker-panel').forEach(p=>p.remove());
-      const panel = document.createElement('div');
-      panel.className = 'icon-picker-panel';
-      panel.innerHTML = buildIconPickerHTML(debtIcons[name] || '');
-      row.insertAdjacentElement('afterend', panel);
-      wireIconPicker(panel);
-      panel.querySelectorAll('.icon-swatch').forEach(sw=>{
-        sw.addEventListener('click', async ()=>{
-          debtIcons[name] = sw.dataset.icon;
-          await saveDebtIcons();
-          renderDebtList();
-        });
-      });
-    });
-  });
-  listEl.querySelectorAll('.edit-debt-btn').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{ e.stopPropagation(); startEditDebtName(btn.dataset.name); });
-  });
-  listEl.querySelectorAll('.del-debt-btn').forEach(btn=>{
-    btn.addEventListener('click', async (e)=>{
-      e.stopPropagation();
-      const name = btn.dataset.name;
-      if(!confirm(`¿Eliminar "${name}" de los pendientes?`)) return;
-      debtItems = debtItems.filter(n=>n!==name);
-      delete debtData[name];
-      delete debtIcons[name];
-      await saveDebtItems();
-      await saveDebtData();
-      await saveDebtIcons();
-      renderDebtList();
-    });
-  });
-}
-
-function startEditDebtName(oldName){
-  const row = document.querySelector(`.debt-row[data-name="${CSS.escape(oldName)}"]`);
-  if(!row) return;
-  row.innerHTML = `<input type="text" class="menu-add-input" id="debtEditInput" value="${escapeHtml(oldName)}">`;
-  const input = row.querySelector('#debtEditInput');
-  input.focus();
-  input.select();
-
-  async function commit(){
-    const val = input.value.trim();
-    if(val && val !== oldName && !debtItems.includes(val)){
-      const idx = debtItems.indexOf(oldName);
-      if(idx !== -1) debtItems[idx] = val;
-      debtData[val] = debtData[oldName];
-      delete debtData[oldName];
-      if(debtIcons[oldName]){ debtIcons[val] = debtIcons[oldName]; delete debtIcons[oldName]; }
-      await saveDebtItems();
-      await saveDebtData();
-      await saveDebtIcons();
-    }
-    renderDebtList();
-  }
-  input.addEventListener('keydown', ev=>{
-    if(ev.key === 'Enter'){ ev.preventDefault(); commit(); }
-    if(ev.key === 'Escape'){ renderDebtList(); }
-  });
-  input.addEventListener('click', ev=> ev.stopPropagation());
-  input.addEventListener('blur', commit);
 }
 
 function resetDebtAddRow(){
@@ -1218,6 +1228,8 @@ function openDebtModal(name){
   editingDebtName = name;
   if(!debtData[name]) debtData[name] = { totalDebt: 0, payments: {} };
   document.getElementById('debtModalTitle').textContent = name;
+  document.getElementById('debtModalIconPreview').innerHTML = getIcon(name, debtIcons[name]);
+  document.getElementById('debtModalIconPicker').style.display = 'none';
   const monthKeys = populateLunaMonths(debtModalMonth);
   const refMonth = lunaFilterMonth.value || currentMonthKey();
   debtModalMonth.value = monthKeys.includes(refMonth) ? refMonth : monthKeys[0];
@@ -1227,8 +1239,80 @@ function openDebtModal(name){
 
 function closeDebtModal(){
   debtModalBackdrop.classList.remove('open');
+  document.getElementById('debtModalIconPicker').style.display = 'none';
   editingDebtName = null;
 }
+
+document.getElementById('debtModalIconBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  const picker = document.getElementById('debtModalIconPicker');
+  const isOpen = picker.style.display !== 'none';
+  if(isOpen){ picker.style.display = 'none'; return; }
+  picker.innerHTML = buildIconPickerHTML(debtIcons[editingDebtName] || '');
+  picker.style.display = '';
+  wireIconPicker(picker);
+  picker.querySelectorAll('.icon-swatch').forEach(sw=>{
+    sw.addEventListener('click', async ()=>{
+      debtIcons[editingDebtName] = sw.dataset.icon;
+      await saveDebtIcons();
+      document.getElementById('debtModalIconPreview').innerHTML = getIcon(editingDebtName, debtIcons[editingDebtName]);
+      picker.style.display = 'none';
+    });
+  });
+});
+
+document.getElementById('debtModalRenameBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  const titleEl = document.getElementById('debtModalTitle');
+  const oldName = editingDebtName;
+  titleEl.outerHTML = `<input type="text" class="menu-add-input" id="debtModalTitleInput" value="${escapeHtml(oldName)}" style="max-width:150px;">`;
+  const input = document.getElementById('debtModalTitleInput');
+  input.focus();
+  input.select();
+  input.addEventListener('click', ev=> ev.stopPropagation());
+  let cancelled = false;
+
+  async function commit(){
+    if(cancelled) return;
+    const val = input.value.trim();
+    if(val && val !== oldName && !debtItems.includes(val)){
+      const idx = debtItems.indexOf(oldName);
+      if(idx !== -1) debtItems[idx] = val;
+      debtData[val] = debtData[oldName];
+      delete debtData[oldName];
+      if(debtIcons[oldName]){ debtIcons[val] = debtIcons[oldName]; delete debtIcons[oldName]; }
+      await saveDebtItems();
+      await saveDebtData();
+      await saveDebtIcons();
+      editingDebtName = val;
+    }
+    input.outerHTML = `<span id="debtModalTitle">${escapeHtml(editingDebtName)}</span>`;
+    renderDebtList();
+  }
+  input.addEventListener('keydown', ev=>{
+    if(ev.key === 'Enter'){ ev.preventDefault(); commit(); }
+    if(ev.key === 'Escape'){
+      cancelled = true;
+      input.outerHTML = `<span id="debtModalTitle">${escapeHtml(oldName)}</span>`;
+    }
+  });
+  input.addEventListener('blur', commit);
+});
+
+document.getElementById('debtModalDeleteBtn').addEventListener('click', async (e)=>{
+  e.stopPropagation();
+  const name = editingDebtName;
+  if(!name) return;
+  if(!confirm(`¿Eliminar "${name}" de los pendientes?`)) return;
+  debtItems = debtItems.filter(n=>n!==name);
+  delete debtData[name];
+  delete debtIcons[name];
+  await saveDebtItems();
+  await saveDebtData();
+  await saveDebtIcons();
+  closeDebtModal();
+  renderDebtList();
+});
 
 function fillDebtModalForMonth(){
   const d = debtData[editingDebtName];
