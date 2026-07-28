@@ -913,6 +913,10 @@ function renderMenu(){
     row.innerHTML = `<div style="flex:1; min-width:0;">
       <input type="text" class="menu-add-input" id="menuAddInput" placeholder="Nuevo ítem...">
       ${buildIconPickerHTML('')}
+      <div class="debt-modal-actions" style="margin-top:10px;">
+        <button type="button" class="btn-secondary" id="menuAddCancel">Cancelar</button>
+        <button type="button" id="menuAddConfirm">Guardar</button>
+      </div>
     </div>`;
     const input = document.getElementById('menuAddInput');
     input.focus();
@@ -929,12 +933,15 @@ function renderMenu(){
       }
       renderMenu();
     }
+    function cancel(){ renderMenu(); }
+
     input.addEventListener('keydown', ev=>{
       if(ev.key === 'Enter'){ ev.preventDefault(); commit(); }
-      if(ev.key === 'Escape'){ renderMenu(); }
+      if(ev.key === 'Escape'){ cancel(); }
     });
     input.addEventListener('click', ev=> ev.stopPropagation());
-    input.addEventListener('blur', commit);
+    document.getElementById('menuAddConfirm').addEventListener('click', (ev)=>{ ev.stopPropagation(); commit(); });
+    document.getElementById('menuAddCancel').addEventListener('click', (ev)=>{ ev.stopPropagation(); cancel(); });
   });
 }
 
@@ -1192,6 +1199,10 @@ document.getElementById('debtAddRow').addEventListener('click', (e)=>{
   row.innerHTML = `<div style="flex:1; min-width:0;">
     <input type="text" class="menu-add-input" id="debtAddInput" placeholder="Nuevo pendiente...">
     ${buildIconPickerHTML('')}
+    <div class="debt-modal-actions" style="margin-top:10px;">
+      <button type="button" class="btn-secondary" id="debtAddCancel">Cancelar</button>
+      <button type="button" id="debtAddConfirm">Guardar</button>
+    </div>
   </div>`;
   const input = document.getElementById('debtAddInput');
   input.focus();
@@ -1211,12 +1222,15 @@ document.getElementById('debtAddRow').addEventListener('click', (e)=>{
     resetDebtAddRow();
     renderDebtList();
   }
+  function cancel(){ resetDebtAddRow(); }
+
   input.addEventListener('keydown', ev=>{
     if(ev.key === 'Enter'){ ev.preventDefault(); commit(); }
-    if(ev.key === 'Escape'){ resetDebtAddRow(); }
+    if(ev.key === 'Escape'){ cancel(); }
   });
   input.addEventListener('click', ev=> ev.stopPropagation());
-  input.addEventListener('blur', commit);
+  document.getElementById('debtAddConfirm').addEventListener('click', (ev)=>{ ev.stopPropagation(); commit(); });
+  document.getElementById('debtAddCancel').addEventListener('click', (ev)=>{ ev.stopPropagation(); cancel(); });
 });
 
 const debtModalBackdrop = document.getElementById('debtModalBackdrop');
