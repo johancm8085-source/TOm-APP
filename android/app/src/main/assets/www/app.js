@@ -2,15 +2,15 @@
 // para que no se vea un parpadeo con los colores por defecto.
 const THEME_KEYS = ['bg','panel','border','gold','gold-dim','accent','text','text-dim','green','red'];
 const DEFAULT_THEME = {
-  bg:'#14120f', panel:'#1c1a16', border:'#3a3226', gold:'#e8b13d', 'gold-dim':'#a87a24',
-  accent:'#e87b3e', text:'#f3efe4', 'text-dim':'#a39d8c', green:'#3fc481', red:'#e2503e'
+  bg:'#111111', panel:'#1b1b1b', border:'#313131', gold:'#f97316', 'gold-dim':'#fb923c',
+  accent:'#fdba74', text:'#ffffff', 'text-dim':'#b0b0b0', green:'#22c55e', red:'#ef4444'
 };
 const THEME_PRESETS = {
-  default: Object.assign({ name: 'Oscuro Dorado' }, DEFAULT_THEME),
-  tomEdition: {
-    name: 'TOM Edition',
-    bg:'#111111', panel:'#1b1b1b', border:'#313131', gold:'#f97316', 'gold-dim':'#f8923c',
-    accent:'#fdba74', text:'#ffffff', 'text-dim':'#b0b0b0', green:'#22c55e', red:'#ef4444'
+  default: Object.assign({ name: 'TOM Premium' }, DEFAULT_THEME),
+  clasico: {
+    name: 'Dorado Clásico',
+    bg:'#14120f', panel:'#1c1a16', border:'#3a3226', gold:'#e8b13d', 'gold-dim':'#a87a24',
+    accent:'#e87b3e', text:'#f3efe4', 'text-dim':'#a39d8c', green:'#3fc481', red:'#e2503e'
   }
 };
 
@@ -96,6 +96,22 @@ function bindModalClose(backdropEl, closeFn, ...triggerEls){
   triggerEls.forEach(el => el && el.addEventListener('click', closeFn));
   backdropEl.addEventListener('click', (e)=>{ if(e.target === backdropEl) closeFn(); });
 }
+
+// Efecto ripple en botones/pestañas/tarjetas, delegado en document para que
+// funcione también en elementos que se vuelven a dibujar con innerHTML.
+document.addEventListener('pointerdown', (e)=>{
+  const target = e.target.closest('button, .tab, .day-filter-btn, .preset-card');
+  if(!target) return;
+  const rect = target.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  const span = document.createElement('span');
+  span.className = 'ripple-effect';
+  span.style.width = span.style.height = size + 'px';
+  span.style.left = (e.clientX - rect.left - size / 2) + 'px';
+  span.style.top = (e.clientY - rect.top - size / 2) + 'px';
+  target.appendChild(span);
+  span.addEventListener('animationend', ()=> span.remove());
+});
 
 // Confirmación propia (visto bueno / X) en vez de confirm() nativo,
 // que el WebView de Android no muestra.
@@ -509,7 +525,7 @@ function renderMenu(){
     const safe = escapeHtml(name);
     return `<div class="menu-row" data-name="${safe}">
       <div class="menu-row-main" data-name="${safe}">${getIcon(name, icons[name])}<span class="menu-row-label">${safe}</span></div>
-      <button type="button" class="menu-icon-btn menu-more-btn" data-name="${safe}" title="Opciones">⋮</button>
+      <button type="button" class="menu-icon-btn menu-more-btn" data-name="${safe}" title="Opciones" aria-label="Opciones de ${safe}">⋮</button>
     </div>`;
   }).join('');
   selectMenu.innerHTML = rows + `<div class="menu-add-row" id="menuAddRow">+ Agregar nuevo</div>`;
@@ -531,7 +547,7 @@ function renderMenu(){
       panel.innerHTML = buildIconPickerHTML(activeIconsMap()[name] || '') +
         `<div class="row-options-actions">
           <input type="text" class="menu-add-input" id="rowRenameInput" value="${escapeHtml(name)}">
-          <button type="button" class="menu-icon-btn row-delete-btn" title="Eliminar">🗑</button>
+          <button type="button" class="menu-icon-btn row-delete-btn" title="Eliminar" aria-label="Eliminar">🗑</button>
         </div>`;
       row.insertAdjacentElement('afterend', panel);
       wireIconPicker(panel);
@@ -726,6 +742,13 @@ function render(){
   document.getElementById('totalIn').textContent = fmt(totalIn);
   document.getElementById('totalOut').textContent = fmt(totalOut);
 
+  const net = totalIn - totalOut;
+  const netEl = document.getElementById('netBalance');
+  const netChip = document.getElementById('netBalanceChip');
+  netEl.textContent = (net >= 0 ? '+' : '-') + fmt(Math.abs(net));
+  netChip.classList.toggle('positive', net >= 0);
+  netChip.classList.toggle('negative', net < 0);
+
   renderChart(list);
 
   const movsEl = document.getElementById('movs');
@@ -748,8 +771,8 @@ function render(){
       </div>
       <div style="display:flex; align-items:center;">
         <div class="mov-amount ${m.type}">${m.type==='in'?'+':'-'}${fmt(m.amount)}</div>
-        <button class="del" onclick="openMovModal('${m.id}')" title="Editar">&#9998;</button>
-        <button class="del" onclick="deleteMov('${m.id}')" title="Eliminar">×</button>
+        <button class="del" onclick="openMovModal('${m.id}')" title="Editar" aria-label="Editar movimiento">&#9998;</button>
+        <button class="del" onclick="deleteMov('${m.id}')" title="Eliminar" aria-label="Eliminar movimiento">×</button>
       </div>
     </div>`;
   }).join('');

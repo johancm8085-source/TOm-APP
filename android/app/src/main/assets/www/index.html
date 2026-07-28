@@ -17,7 +17,7 @@
 <body>
 
 <div class="logo">TOM</div>
-<select id="appModeSelect">
+<select id="appModeSelect" aria-label="Sección de la app">
   <option value="tom">TOM</option>
   <option value="luna">Luna</option>
   <option value="apariencia">🎨 Apariencia</option>
@@ -52,16 +52,35 @@
 
   <div class="balance-card">
     <div class="balance-label">Dinero</div>
-    <select id="balanceModeSelect">
+    <select id="balanceModeSelect" aria-label="Tipo de saldo a mostrar">
       <option value="saldo">Saldo</option>
       <option value="total">Total</option>
       <option value="dia">Gastos del día</option>
     </select>
     <div class="balance-amount" id="balance">$0</div>
     <div class="balance-edit-hint" id="balanceEditHint"></div>
-    <div class="balance-sub">
-      <span>Entradas: <span class="in" id="totalIn">$0</span></span>
-      <span>Salidas: <span class="out" id="totalOut">$0</span></span>
+    <div class="balance-stats">
+      <div class="stat-chip in">
+        <span class="stat-arrow">▲</span>
+        <div>
+          <div class="stat-label">Entradas</div>
+          <div class="stat-value" id="totalIn">$0</div>
+        </div>
+      </div>
+      <div class="stat-chip out">
+        <span class="stat-arrow">▼</span>
+        <div>
+          <div class="stat-label">Gastos</div>
+          <div class="stat-value" id="totalOut">$0</div>
+        </div>
+      </div>
+      <div class="stat-chip" id="netBalanceChip">
+        <span class="stat-arrow">●</span>
+        <div>
+          <div class="stat-label">Balance</div>
+          <div class="stat-value" id="netBalance">$0</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -83,7 +102,7 @@
     <div class="modal-box">
       <div class="modal-header">
         <span>Elegir día</span>
-        <button type="button" class="modal-close" id="dayModalClose">×</button>
+        <button type="button" class="modal-close" id="dayModalClose" aria-label="Cerrar">×</button>
       </div>
       <div class="modal-days-grid" id="dayModalGrid"></div>
     </div>
@@ -117,7 +136,7 @@
     <div class="modal-box">
       <div class="modal-header">
         <span>Editar movimiento</span>
-        <button type="button" class="modal-close" id="movModalClose">×</button>
+        <button type="button" class="modal-close" id="movModalClose" aria-label="Cerrar">×</button>
       </div>
       <div class="debt-modal-field">
         <label>Descripción</label>
@@ -189,10 +208,10 @@
           <span id="debtModalTitle">Pendiente</span>
         </span>
         <span style="display:flex; align-items:center; gap:2px;">
-          <button type="button" class="menu-icon-btn" id="debtModalIconBtn" title="Ícono">🎨</button>
-          <button type="button" class="menu-icon-btn" id="debtModalRenameBtn" title="Renombrar">&#9998;</button>
-          <button type="button" class="menu-icon-btn" id="debtModalDeleteBtn" title="Eliminar">🗑</button>
-          <button type="button" class="modal-close" id="debtModalClose">×</button>
+          <button type="button" class="menu-icon-btn" id="debtModalIconBtn" title="Ícono" aria-label="Cambiar ícono">🎨</button>
+          <button type="button" class="menu-icon-btn" id="debtModalRenameBtn" title="Renombrar" aria-label="Renombrar">&#9998;</button>
+          <button type="button" class="menu-icon-btn" id="debtModalDeleteBtn" title="Eliminar" aria-label="Eliminar pendiente">🗑</button>
+          <button type="button" class="modal-close" id="debtModalClose" aria-label="Cerrar">×</button>
         </span>
       </div>
       <div class="icon-picker" id="debtModalIconPicker" style="display:none; margin-bottom:14px;"></div>
