@@ -273,6 +273,19 @@
   <option value="luna">Luna</option>
 </select>
 
+<div class="modal-backdrop" id="confirmModalBackdrop">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>Confirmar</span>
+    </div>
+    <div id="confirmModalMessage" style="margin-bottom:16px; font-size:15px; font-family: system-ui, sans-serif;"></div>
+    <div class="debt-modal-actions">
+      <button type="button" class="btn-secondary" id="confirmModalNo">✗ Cancelar</button>
+      <button type="button" id="confirmModalYes">✓ Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <div id="tomSection">
 
 <div class="tabs">
@@ -497,6 +510,30 @@ function todayStr(){
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+
+// Confirmación propia (visto bueno / X) en vez de confirm() nativo,
+// que el WebView de Android no muestra.
+const confirmModalBackdrop = document.getElementById('confirmModalBackdrop');
+let confirmModalCallback = null;
+
+function showConfirm(message, onYes){
+  document.getElementById('confirmModalMessage').textContent = message;
+  confirmModalCallback = onYes;
+  confirmModalBackdrop.classList.add('open');
+}
+
+function hideConfirm(){
+  confirmModalBackdrop.classList.remove('open');
+  confirmModalCallback = null;
+}
+
+document.getElementById('confirmModalYes').addEventListener('click', async ()=>{
+  const cb = confirmModalCallback;
+  hideConfirm();
+  if(cb) await cb();
+});
+document.getElementById('confirmModalNo').addEventListener('click', hideConfirm);
+confirmModalBackdrop.addEventListener('click', (e)=>{ if(e.target === confirmModalBackdrop) hideConfirm(); });
 
 function computeTotal(){
   let total = 0;
@@ -895,14 +932,15 @@ function renderMenu(){
       });
       renameInput.addEventListener('blur', commitRename);
 
-      panel.querySelector('.row-delete-btn').addEventListener('click', async (ev)=>{
+      panel.querySelector('.row-delete-btn').addEventListener('click', (ev)=>{
         ev.stopPropagation();
-        if(!confirm(`¿Eliminar "${name}" de la lista?`)) return;
-        items[currentTab] = items[currentTab].filter(n=>n!==name);
-        delete itemIcons[currentTab][name];
-        await saveItems(currentTab);
-        await saveItemIcons(currentTab);
-        renderMenu();
+        showConfirm(`¿Eliminar "${name}" de la lista?`, async ()=>{
+          items[currentTab] = items[currentTab].filter(n=>n!==name);
+          delete itemIcons[currentTab][name];
+          await saveItems(currentTab);
+          await saveItemIcons(currentTab);
+          renderMenu();
+        });
       });
     });
   });
@@ -1313,19 +1351,20 @@ document.getElementById('debtModalRenameBtn').addEventListener('click', (e)=>{
   input.addEventListener('blur', commit);
 });
 
-document.getElementById('debtModalDeleteBtn').addEventListener('click', async (e)=>{
+document.getElementById('debtModalDeleteBtn').addEventListener('click', (e)=>{
   e.stopPropagation();
   const name = editingDebtName;
   if(!name) return;
-  if(!confirm(`¿Eliminar "${name}" de los pendientes?`)) return;
-  debtItems = debtItems.filter(n=>n!==name);
-  delete debtData[name];
-  delete debtIcons[name];
-  await saveDebtItems();
-  await saveDebtData();
-  await saveDebtIcons();
-  closeDebtModal();
-  renderDebtList();
+  showConfirm(`¿Eliminar "${name}" de los pendientes?`, async ()=>{
+    debtItems = debtItems.filter(n=>n!==name);
+    delete debtData[name];
+    delete debtIcons[name];
+    await saveDebtItems();
+    await saveDebtData();
+    await saveDebtIcons();
+    closeDebtModal();
+    renderDebtList();
+  });
 });
 
 function fillDebtModalForMonth(){
