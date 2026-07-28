@@ -20,6 +20,7 @@
     --border: rgba(214,178,110,0.16);
     --gold: #e8b13d;
     --gold-dim: #a87a24;
+    --accent: #e87b3e;
     --text: #f3efe4;
     --text-dim: #a39d8c;
     --green: #3fc481;
@@ -108,7 +109,7 @@
     text-align:left; cursor:pointer;
   }
   .day-filter-btn:hover{ border-color: var(--gold); }
-  .day-filter-btn.active{ border-color: var(--gold); color: var(--gold); background: var(--panel-2); }
+  .day-filter-btn.active{ border-color: var(--accent); color: var(--accent); background: var(--panel-2); }
   .modal-backdrop{
     display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6);
     align-items:center; justify-content:center; z-index:100; padding:20px;
@@ -239,7 +240,7 @@
     display:flex; align-items:center; justify-content:center; cursor:pointer; background:none; padding:0;
   }
   .icon-swatch svg{ width:16px; height:16px; }
-  .icon-swatch.active{ border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+  .icon-swatch.active{ border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .icon-picker-btn{ font-size:15px; }
   .icon-picker-panel{ background: var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:10px; margin:2px 0 6px; }
   .menu-more-btn{ font-size:18px; font-weight:700; }
@@ -263,6 +264,37 @@
   .debt-modal-actions button{ flex:1; }
   .btn-secondary{ background: var(--panel); color:var(--text); border:1px solid var(--border) !important; }
   .btn-secondary:hover{ background: var(--panel-2); }
+
+  .preset-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:22px; }
+  .preset-card{
+    background: var(--panel); border:2px solid var(--border); border-radius:14px;
+    padding:12px; cursor:pointer; font-family: system-ui, sans-serif;
+  }
+  .preset-card.active{ border-color: var(--accent); }
+  .preset-swatch-row{ display:flex; gap:5px; margin-bottom:8px; }
+  .preset-swatch{ width:20px; height:20px; border-radius:6px; flex:0 0 auto; border:1px solid rgba(255,255,255,0.08); }
+  .preset-name{ font-size:13.5px; color:var(--text); }
+
+  .theme-color-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:20px; }
+  .theme-color-row{
+    display:flex; align-items:center; gap:10px; background: var(--panel); border:1px solid var(--border);
+    border-radius:10px; padding:8px 10px; font-family: system-ui, sans-serif;
+  }
+  .theme-color-row input[type="color"]{
+    width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:none; padding:0; cursor:pointer; flex:0 0 auto;
+  }
+  .theme-color-row label{ font-size:13px; color:var(--text-dim); }
+
+  .theme-preview{
+    background: var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:16px; margin-bottom:20px; font-family: system-ui, sans-serif;
+  }
+  .theme-preview-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px; }
+  .theme-badge{
+    font-size:12px; padding:5px 10px; border-radius:999px; font-weight:600;
+  }
+  .theme-badge.in{ background: color-mix(in srgb, var(--green) 20%, transparent); color: var(--green); }
+  .theme-badge.out{ background: color-mix(in srgb, var(--red) 20%, transparent); color: var(--red); }
 </style>
 </head>
 <body>
@@ -271,6 +303,7 @@
 <select id="appModeSelect">
   <option value="tom">TOM</option>
   <option value="luna">Luna</option>
+  <option value="apariencia">🎨 Apariencia</option>
 </select>
 
 <div class="modal-backdrop" id="confirmModalBackdrop">
@@ -458,7 +491,64 @@
 
 </div>
 
+<div id="aparienciaSection" class="wrap" style="display:none;">
+
+  <div class="items-block">
+    <div class="items-title">Paleta de colores</div>
+    <div class="preset-grid" id="presetGrid"></div>
+  </div>
+
+  <div class="items-block">
+    <div class="items-title">Personalizar cada color</div>
+    <div class="theme-color-grid" id="themeColorGrid"></div>
+  </div>
+
+  <div class="theme-preview">
+    <div class="items-title" style="margin-bottom:0;">Vista previa</div>
+    <div class="theme-preview-row">
+      <button type="button" id="themePreviewBtn">Botón</button>
+      <span class="theme-badge in">Entrada</span>
+      <span class="theme-badge out">Gasto</span>
+      <span id="themePreviewIcons" style="display:flex; gap:6px;"></span>
+    </div>
+  </div>
+
+  <button type="button" class="btn-secondary" id="themeResetBtn" style="width:100%;">Restablecer colores originales</button>
+
+</div>
+
 <script>
+// Aplica el tema guardado de inmediato (antes de cualquier otra cosa)
+// para que no se vea un parpadeo con los colores por defecto.
+const THEME_KEYS = ['bg','panel','border','gold','gold-dim','accent','text','text-dim','green','red'];
+const DEFAULT_THEME = {
+  bg:'#14120f', panel:'#1c1a16', border:'#3a3226', gold:'#e8b13d', 'gold-dim':'#a87a24',
+  accent:'#e87b3e', text:'#f3efe4', 'text-dim':'#a39d8c', green:'#3fc481', red:'#e2503e'
+};
+const THEME_PRESETS = {
+  default: Object.assign({ name: 'Oscuro Dorado' }, DEFAULT_THEME),
+  tomEdition: {
+    name: 'TOM Edition',
+    bg:'#111111', panel:'#1b1b1b', border:'#313131', gold:'#f97316', 'gold-dim':'#f8923c',
+    accent:'#fdba74', text:'#ffffff', 'text-dim':'#b0b0b0', green:'#22c55e', red:'#ef4444'
+  }
+};
+
+function applyTheme(vars){
+  THEME_KEYS.forEach(k=>{
+    if(vars[k]) document.documentElement.style.setProperty('--'+k, vars[k]);
+  });
+  if(vars.gold) document.documentElement.style.setProperty('--amber', vars.gold);
+  if(vars.panel) document.documentElement.style.setProperty('--panel-2', vars.panel);
+}
+
+(function applySavedThemeEarly(){
+  try{
+    const saved = localStorage.getItem('theme:custom');
+    if(saved) applyTheme(JSON.parse(saved));
+  }catch(e){}
+})();
+
 // Guardado real en el celular (localStorage), para que la app funcione
 // instalada y sin internet, fuera de Claude.ai.
 if (!window.storage) {
@@ -1457,16 +1547,94 @@ function renderLunaChart(){
 const appModeSelect = document.getElementById('appModeSelect');
 const tomSection = document.getElementById('tomSection');
 const lunaSection = document.getElementById('lunaSection');
+const aparienciaSection = document.getElementById('aparienciaSection');
 appModeSelect.addEventListener('change', ()=>{
   appMode = appModeSelect.value;
-  if(appMode === 'luna'){
-    tomSection.style.display = 'none';
-    lunaSection.style.display = '';
-  } else {
-    tomSection.style.display = '';
-    lunaSection.style.display = 'none';
-  }
+  tomSection.style.display = appMode === 'tom' ? '' : 'none';
+  lunaSection.style.display = appMode === 'luna' ? '' : 'none';
+  aparienciaSection.style.display = appMode === 'apariencia' ? '' : 'none';
 });
+
+// --- Apariencia: paleta de colores personalizable ---
+
+function currentThemeVars(){
+  const styles = getComputedStyle(document.documentElement);
+  const vars = {};
+  THEME_KEYS.forEach(k=>{ vars[k] = styles.getPropertyValue('--'+k).trim(); });
+  return vars;
+}
+
+async function saveTheme(vars){
+  try{ localStorage.setItem('theme:custom', JSON.stringify(vars)); }
+  catch(e){ console.error('Error guardando tema', e); }
+}
+
+function renderThemePreviewIcons(){
+  const el = document.getElementById('themePreviewIcons');
+  el.innerHTML = getIcon('Gasolina') + getIcon('Arriendo') + getIcon('Helado');
+}
+
+function renderPresetGrid(){
+  const grid = document.getElementById('presetGrid');
+  const current = currentThemeVars();
+  grid.innerHTML = Object.entries(THEME_PRESETS).map(([key, preset])=>{
+    const isActive = THEME_KEYS.every(k => current[k].toLowerCase() === preset[k].toLowerCase());
+    return `<div class="preset-card${isActive ? ' active' : ''}" data-preset="${key}">
+      <div class="preset-swatch-row">
+        <span class="preset-swatch" style="background:${preset.bg};"></span>
+        <span class="preset-swatch" style="background:${preset.gold};"></span>
+        <span class="preset-swatch" style="background:${preset.accent};"></span>
+        <span class="preset-swatch" style="background:${preset.green};"></span>
+      </div>
+      <div class="preset-name">${escapeHtml(preset.name)}</div>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.preset-card').forEach(card=>{
+    card.addEventListener('click', async ()=>{
+      const preset = THEME_PRESETS[card.dataset.preset];
+      applyTheme(preset);
+      await saveTheme(currentThemeVars());
+      renderPresetGrid();
+      renderThemeColorGrid();
+    });
+  });
+}
+
+function renderThemeColorGrid(){
+  const grid = document.getElementById('themeColorGrid');
+  const current = currentThemeVars();
+  grid.innerHTML = THEME_KEYS.map(k=>{
+    return `<div class="theme-color-row">
+      <input type="color" id="theme-${k}" value="${current[k]}">
+      <label for="theme-${k}">${escapeHtml(THEME_LABELS[k])}</label>
+    </div>`;
+  }).join('');
+
+  THEME_KEYS.forEach(k=>{
+    document.getElementById('theme-'+k).addEventListener('input', async (e)=>{
+      applyTheme({ [k]: e.target.value });
+      await saveTheme(currentThemeVars());
+      renderPresetGrid();
+    });
+  });
+}
+
+document.getElementById('themeResetBtn').addEventListener('click', async ()=>{
+  applyTheme(THEME_PRESETS.default);
+  await saveTheme(currentThemeVars());
+  renderPresetGrid();
+  renderThemeColorGrid();
+});
+
+const THEME_LABELS = {
+  bg:'Fondo', panel:'Tarjetas', border:'Bordes', gold:'Principal', 'gold-dim':'Hover',
+  accent:'Acento', text:'Texto', 'text-dim':'Texto gris', green:'Verde', red:'Rojo'
+};
+
+renderPresetGrid();
+renderThemeColorGrid();
+renderThemePreviewIcons();
 
 updateBalanceModeUI();
 document.getElementById('f-date').value = todayStr();
