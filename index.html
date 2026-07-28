@@ -72,13 +72,13 @@
   }
   .balance-label{ font-size:13px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; font-family: system-ui, sans-serif;}
   .balance-sub-label{ font-size:14px; color:var(--gold); margin-top:10px; font-family: system-ui, sans-serif; letter-spacing:0.5px;}
-  .balance-amount{ font-size:44px; margin-top:6px; color: var(--gold); cursor:pointer; display:inline-flex; align-items:center; gap:8px; justify-content:center; }
+  .balance-amount{ font-size:66px; margin-top:6px; color: var(--gold); cursor:pointer; display:inline-flex; align-items:center; gap:8px; justify-content:center; line-height:1.1; }
   .balance-amount.total-mode{ color: #ffffff; }
   .balance-edit-hint{ font-size:12px; color:var(--text-dim); margin-top:4px; font-family: system-ui, sans-serif; }
   .balance-edit-hint i{ font-style:normal; }
   #balanceInput{
-    font-size:28px; text-align:center; background: var(--panel-2); color:var(--gold);
-    border:1px solid var(--border); border-radius:8px; padding:4px 10px; width:180px;
+    font-size:42px; text-align:center; background: var(--panel-2); color:var(--gold);
+    border:1px solid var(--border); border-radius:8px; padding:4px 10px; width:220px;
     font-family: 'Georgia','Times New Roman', serif;
   }
   .balance-sub{ display:flex; justify-content:center; gap:18px; margin-top:10px; font-size:12px; color:var(--text-dim); font-family: system-ui, sans-serif;}
@@ -101,7 +101,7 @@
   .legend-row{ display:flex; align-items:center; gap:8px; }
   .legend-dot{ width:11px; height:11px; border-radius:3px; flex:0 0 11px; }
   .legend-name{ flex:1; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .legend-pct{ color:var(--text-dim); flex:0 0 auto; }
+  .legend-pct{ color:var(--text-dim); flex:0 0 auto; font-size:11px; opacity:0.85; }
 
   .section-title{
     font-family: system-ui, sans-serif; font-size:20px; font-weight:700; color: var(--gold);
@@ -198,7 +198,7 @@
   #f-desc{ flex:1 1 160px; }
   #f-amount{ flex:0 1 110px; }
   #f-type{ flex:0 1 100px; }
-  #f-date{ flex:0 1 140px; }
+  #f-note{ flex:1 1 160px; }
   button{
     background: var(--gold-dim); color: var(--bg); border:none; border-radius:10px;
     padding:13px 20px; font-size:15px; font-weight:600; cursor:pointer; font-family: system-ui, sans-serif;
@@ -214,6 +214,7 @@
   .mov-left{ display:flex; align-items:center; gap:10px; }
   .mov-desc{ font-size:16px; }
   .mov-meta{ font-size:12px; color:var(--text-dim); margin-top:2px; }
+  .mov-note{ font-size:12px; color:var(--accent); margin-top:2px; font-style:italic; }
   .mov-amount{ font-size:17px; font-weight:600; }
   .mov-amount.in{ color: var(--green); }
   .mov-amount.out{ color: var(--red); }
@@ -347,9 +348,10 @@
     <select id="balanceModeSelect">
       <option value="saldo">Saldo</option>
       <option value="total">Total</option>
+      <option value="dia">Gastos del día</option>
     </select>
     <div class="balance-amount" id="balance">$0</div>
-    <div class="balance-edit-hint" id="balanceEditHint">Toca el saldo para poner un monto en efectivo</div>
+    <div class="balance-edit-hint" id="balanceEditHint"></div>
     <div class="balance-sub">
       <span>Entradas: <span class="in" id="totalIn">$0</span></span>
       <span>Salidas: <span class="out" id="totalOut">$0</span></span>
@@ -381,7 +383,7 @@
   </div>
 
   <div class="items-block">
-    <div class="items-title">Lista</div>
+    <div class="items-title" id="listTitle">Lista</div>
     <div class="select-wrap" id="selectWrap">
       <button type="button" class="select-btn" id="selectBtn">
         <span class="select-btn-inner" id="selectBtnInner">Elegir ítem</span>
@@ -398,7 +400,7 @@
       <option value="out">Gasto</option>
       <option value="in">Ingreso</option>
     </select>
-    <input id="f-date" type="date">
+    <input id="f-note" type="text" placeholder="Nota (opcional)">
     <button type="submit">Agregar</button>
   </form>
 
@@ -428,6 +430,10 @@
       <div class="debt-modal-field">
         <label>Fecha</label>
         <input type="date" id="movModalDate">
+      </div>
+      <div class="debt-modal-field">
+        <label>Nota (opcional)</label>
+        <input type="text" id="movModalNote" placeholder="Ej: Préstamo de la moto">
       </div>
       <div class="debt-modal-actions">
         <button type="button" class="btn-secondary" id="movModalCancel">Cancelar</button>
@@ -495,6 +501,10 @@
       <div class="debt-modal-field">
         <label>Abono de este mes</label>
         <input type="number" step="0.01" id="debtModalPayment" placeholder="0">
+      </div>
+      <div class="debt-modal-field">
+        <label>Nota (opcional)</label>
+        <input type="text" id="debtModalNote" placeholder="Ej: Préstamo de la moto">
       </div>
       <div class="debt-modal-summary">
         <span>Abonado en total: <b id="debtModalPaidTotal">$0</b></span>
@@ -599,6 +609,15 @@ const DEFAULT_ITEMS = {
 };
 let items = { gastos: [], entretenimiento: [], ahorro: [] };
 let itemIcons = { gastos: {}, entretenimiento: {}, ahorro: {} }; // name -> "iconKey|color"
+
+const DEFAULT_INCOME_ITEMS = {
+  gastos: ['Sueldo','Emprendimiento'],
+  entretenimiento: ['Sueldo','Emprendimiento'],
+  ahorro: ['Sueldo','Emprendimiento']
+};
+let incomeItems = { gastos: [], entretenimiento: [], ahorro: [] };
+let incomeItemIcons = { gastos: {}, entretenimiento: {}, ahorro: {} }; // name -> "iconKey|color"
+
 let initialBalance = { gastos: 0, entretenimiento: 0, ahorro: 0 };
 let balanceMode = 'saldo';
 let showChart = false;
@@ -652,6 +671,13 @@ function computeTotal(){
   return total;
 }
 
+function computeTodayExpenses(){
+  const today = todayStr();
+  return data[currentTab]
+    .filter(m => m.type === 'out' && m.date === today)
+    .reduce((sum, m) => sum + m.amount, 0);
+}
+
 // --- Iconos de línea (SVG) por ítem, con color temático ---
 const ICON_PATHS = {
   house: '<path d="M3 9 L10 3 L17 9 M5 8 V17 H15 V8 M8 17 V12 H12 V17"/>',
@@ -694,7 +720,9 @@ const ITEM_ICON_MAP = {
   'mama': ['tag','pink'],
   'tarjeta': ['card','blue'],
   'parqueadero': ['suitcase','coral'],
-  'servicio': ['spray','teal']
+  'servicio': ['spray','teal'],
+  'sueldo': ['coin','green'],
+  'emprendimiento': ['store','green']
 };
 
 function getIcon(name, overrideKey){
@@ -760,6 +788,14 @@ async function loadData(){
       const r4 = await window.storage.get('icons:'+t);
       itemIcons[t] = r4 ? JSON.parse(r4.value) : {};
     }catch(e){ itemIcons[t] = {}; }
+    try{
+      const r5 = await window.storage.get('incomeItems:'+t);
+      incomeItems[t] = r5 ? JSON.parse(r5.value) : [...DEFAULT_INCOME_ITEMS[t]];
+    }catch(e){ incomeItems[t] = [...DEFAULT_INCOME_ITEMS[t]]; }
+    try{
+      const r6 = await window.storage.get('incomeIcons:'+t);
+      incomeItemIcons[t] = r6 ? JSON.parse(r6.value) : {};
+    }catch(e){ incomeItemIcons[t] = {}; }
   }
   populateFilters();
   renderMenu();
@@ -784,6 +820,35 @@ async function saveItems(t){
 async function saveItemIcons(t){
   try{ await window.storage.set('icons:'+t, JSON.stringify(itemIcons[t])); }
   catch(e){ console.error('Error guardando iconos', e); }
+}
+
+async function saveIncomeItems(t){
+  try{ await window.storage.set('incomeItems:'+t, JSON.stringify(incomeItems[t])); }
+  catch(e){ console.error('Error guardando ingresos', e); }
+}
+
+async function saveIncomeItemIcons(t){
+  try{ await window.storage.set('incomeIcons:'+t, JSON.stringify(incomeItemIcons[t])); }
+  catch(e){ console.error('Error guardando iconos de ingresos', e); }
+}
+
+// Devuelve la lista activa (gastos o ingresos) según el tipo elegido en el formulario
+function activeListKind(){
+  return document.getElementById('f-type').value === 'in' ? 'income' : 'expense';
+}
+function activeItemsArray(){
+  return activeListKind() === 'income' ? incomeItems[currentTab] : items[currentTab];
+}
+function activeIconsMap(){
+  return activeListKind() === 'income' ? incomeItemIcons[currentTab] : itemIcons[currentTab];
+}
+async function saveActiveItems(){
+  if(activeListKind() === 'income') await saveIncomeItems(currentTab);
+  else await saveItems(currentTab);
+}
+async function saveActiveIcons(){
+  if(activeListKind() === 'income') await saveIncomeItemIcons(currentTab);
+  else await saveItemIcons(currentTab);
 }
 
 document.querySelectorAll('.tab').forEach(el=>{
@@ -900,10 +965,14 @@ function updateBalanceModeUI(){
     balanceEl.style.cursor = 'default';
     balanceEl.classList.add('total-mode');
     balanceEditHint.textContent = 'Vista total de las 3 pestañas (no editable)';
+  } else if(balanceMode === 'dia'){
+    balanceEl.style.cursor = 'default';
+    balanceEl.classList.remove('total-mode');
+    balanceEditHint.textContent = 'Total de gastos de hoy (no editable)';
   } else {
     balanceEl.style.cursor = 'pointer';
     balanceEl.classList.remove('total-mode');
-    balanceEditHint.textContent = 'Toca el saldo para poner un monto en efectivo';
+    balanceEditHint.textContent = '';
   }
 }
 
@@ -915,7 +984,7 @@ balanceModeSelect.addEventListener('change', ()=>{
 
 const balanceEl = document.getElementById('balance');
 balanceEl.addEventListener('click', ()=>{
-  if(balanceMode === 'total') return;
+  if(balanceMode === 'total' || balanceMode === 'dia') return;
   const input = document.createElement('input');
   input.type = 'number';
   input.step = '0.01';
@@ -949,6 +1018,13 @@ selectBtn.addEventListener('click', ()=>{
   selectBtn.classList.toggle('open', isOpen);
 });
 
+// Cambiar entre Gasto/Ingreso cambia qué lista (items o ingresos) se ve en "Lista"
+document.getElementById('f-type').addEventListener('change', ()=>{
+  document.getElementById('f-desc').value = '';
+  selectBtnInner.textContent = 'Elegir ítem';
+  renderMenu();
+});
+
 document.addEventListener('click', (e)=>{
   if(!selectWrap.contains(e.target)){
     selectMenu.classList.remove('open');
@@ -966,17 +1042,22 @@ document.addEventListener('click', (e)=>{
 
 function chooseItem(name){
   document.getElementById('f-desc').value = name;
-  selectBtnInner.innerHTML = getIcon(name, itemIcons[currentTab][name]) + `<span>${escapeHtml(name)}</span>`;
+  selectBtnInner.innerHTML = getIcon(name, activeIconsMap()[name]) + `<span>${escapeHtml(name)}</span>`;
   selectMenu.classList.remove('open');
   selectBtn.classList.remove('open');
   document.getElementById('f-amount').focus();
 }
 
 function renderMenu(){
-  const rows = items[currentTab].map(name=>{
+  const listTitle = document.getElementById('listTitle');
+  if(listTitle) listTitle.textContent = activeListKind() === 'income' ? 'Lista de ingresos' : 'Lista';
+
+  const list = activeItemsArray();
+  const icons = activeIconsMap();
+  const rows = list.map(name=>{
     const safe = escapeHtml(name);
     return `<div class="menu-row" data-name="${safe}">
-      <div class="menu-row-main" data-name="${safe}">${getIcon(name, itemIcons[currentTab][name])}<span class="menu-row-label">${safe}</span></div>
+      <div class="menu-row-main" data-name="${safe}">${getIcon(name, icons[name])}<span class="menu-row-label">${safe}</span></div>
       <button type="button" class="menu-icon-btn menu-more-btn" data-name="${safe}" title="Opciones">⋮</button>
     </div>`;
   }).join('');
@@ -996,7 +1077,7 @@ function renderMenu(){
       selectMenu.querySelectorAll('.icon-picker-panel').forEach(p=>p.remove());
       const panel = document.createElement('div');
       panel.className = 'icon-picker-panel';
-      panel.innerHTML = buildIconPickerHTML(itemIcons[currentTab][name] || '') +
+      panel.innerHTML = buildIconPickerHTML(activeIconsMap()[name] || '') +
         `<div class="row-options-actions">
           <input type="text" class="menu-add-input" id="rowRenameInput" value="${escapeHtml(name)}">
           <button type="button" class="menu-icon-btn row-delete-btn" title="Eliminar">🗑</button>
@@ -1005,8 +1086,8 @@ function renderMenu(){
       wireIconPicker(panel);
       panel.querySelectorAll('.icon-swatch').forEach(sw=>{
         sw.addEventListener('click', async ()=>{
-          itemIcons[currentTab][name] = sw.dataset.icon;
-          await saveItemIcons(currentTab);
+          activeIconsMap()[name] = sw.dataset.icon;
+          await saveActiveIcons();
           renderMenu();
           render();
         });
@@ -1017,19 +1098,25 @@ function renderMenu(){
       async function commitRename(){
         const val = renameInput.value.trim();
         if(val && val !== name){
-          const idx = items[currentTab].indexOf(name);
-          if(idx !== -1) items[currentTab][idx] = val;
-          data[currentTab].forEach(m=>{ if(m.desc === name) m.desc = val; });
-          if(itemIcons[currentTab][name]){
-            itemIcons[currentTab][val] = itemIcons[currentTab][name];
-            delete itemIcons[currentTab][name];
-            await saveItemIcons(currentTab);
+          const arr = activeItemsArray();
+          const icons2 = activeIconsMap();
+          const idx = arr.indexOf(name);
+          if(idx !== -1) arr[idx] = val;
+          const kind = activeListKind();
+          data[currentTab].forEach(m=>{
+            const movKind = m.type === 'in' ? 'income' : 'expense';
+            if(movKind === kind && m.desc === name) m.desc = val;
+          });
+          if(icons2[name]){
+            icons2[val] = icons2[name];
+            delete icons2[name];
+            await saveActiveIcons();
           }
-          await saveItems(currentTab);
+          await saveActiveItems();
           await saveTab(currentTab);
           if(document.getElementById('f-desc').value === name){
             document.getElementById('f-desc').value = val;
-            selectBtnInner.innerHTML = getIcon(val, itemIcons[currentTab][val]) + `<span>${escapeHtml(val)}</span>`;
+            selectBtnInner.innerHTML = getIcon(val, activeIconsMap()[val]) + `<span>${escapeHtml(val)}</span>`;
           }
           renderMenu();
           render();
@@ -1043,10 +1130,13 @@ function renderMenu(){
       panel.querySelector('.row-delete-btn').addEventListener('click', (ev)=>{
         ev.stopPropagation();
         showConfirm(`¿Eliminar "${name}" de la lista?`, async ()=>{
-          items[currentTab] = items[currentTab].filter(n=>n!==name);
-          delete itemIcons[currentTab][name];
-          await saveItems(currentTab);
-          await saveItemIcons(currentTab);
+          const arr = activeItemsArray();
+          const kept = arr.filter(n=>n!==name);
+          arr.length = 0;
+          arr.push(...kept);
+          delete activeIconsMap()[name];
+          await saveActiveItems();
+          await saveActiveIcons();
           renderMenu();
         });
       });
@@ -1071,11 +1161,11 @@ function renderMenu(){
     async function commit(){
       const val = input.value.trim();
       if(val){
-        items[currentTab].push(val);
+        activeItemsArray().push(val);
         const chosen = row.querySelector('.icon-swatch.active');
-        if(chosen) itemIcons[currentTab][val] = chosen.dataset.icon;
-        await saveItems(currentTab);
-        await saveItemIcons(currentTab);
+        if(chosen) activeIconsMap()[val] = chosen.dataset.icon;
+        await saveActiveItems();
+        await saveActiveIcons();
       }
       renderMenu();
     }
@@ -1096,15 +1186,17 @@ document.getElementById('form').addEventListener('submit', async e=>{
   const desc = document.getElementById('f-desc').value.trim();
   const amount = parseFloat(document.getElementById('f-amount').value);
   const type = document.getElementById('f-type').value;
-  let date = document.getElementById('f-date').value;
-  if(!date) date = new Date().toISOString().slice(0,10);
+  const note = document.getElementById('f-note').value.trim();
+  // La fecha es automática: el día de hoy, o el día activo en el filtro
+  // "Días" si el usuario ya eligió uno (para cargar información pasada).
+  const date = selectedDay || todayStr();
   if(!desc || isNaN(amount)) return;
 
-  data[currentTab].push({ id: Date.now().toString(), desc, amount, type, date });
+  data[currentTab].push({ id: Date.now().toString(), desc, amount, type, date, note });
   await saveTab(currentTab);
   e.target.reset();
-  document.getElementById('f-date').value = todayStr();
   selectBtnInner.textContent = 'Elegir ítem';
+  renderMenu();
   populateFilters();
   render();
 });
@@ -1127,6 +1219,7 @@ function openMovModal(id){
   document.getElementById('movModalAmount').value = m.amount;
   document.getElementById('movModalType').value = m.type;
   document.getElementById('movModalDate').value = m.date;
+  document.getElementById('movModalNote').value = m.note || '';
   movModalBackdrop.classList.add('open');
 }
 
@@ -1146,11 +1239,13 @@ document.getElementById('movModalSave').addEventListener('click', async ()=>{
   const amount = parseFloat(document.getElementById('movModalAmount').value);
   const type = document.getElementById('movModalType').value;
   const date = document.getElementById('movModalDate').value;
+  const note = document.getElementById('movModalNote').value.trim();
   if(!desc || isNaN(amount) || !date) return;
   m.desc = desc;
   m.amount = amount;
   m.type = type;
   m.date = date;
+  m.note = note;
   await saveTab(currentTab);
   closeMovModal();
   populateFilters();
@@ -1176,7 +1271,9 @@ function render(){
 
   document.getElementById('balance').textContent = balanceMode === 'total'
     ? fmt(computeTotal())
-    : fmt(initialBalance[currentTab] + totalIn - totalOut);
+    : balanceMode === 'dia'
+      ? fmt(computeTodayExpenses())
+      : fmt(initialBalance[currentTab] + totalIn - totalOut);
   document.getElementById('totalIn').textContent = fmt(totalIn);
   document.getElementById('totalOut').textContent = fmt(totalOut);
 
@@ -1189,12 +1286,15 @@ function render(){
   }
   movsEl.innerHTML = list.map(m=>{
     const fecha = new Date(m.date+'T00:00').toLocaleDateString('es-ES',{day:'numeric', month:'short'});
+    const iconMap = m.type === 'in' ? incomeItemIcons[currentTab] : itemIcons[currentTab];
+    const noteHtml = m.note ? `<div class="mov-note">${escapeHtml(m.note)}</div>` : '';
     return `<div class="mov">
       <div class="mov-left">
-        ${getIcon(m.desc, itemIcons[currentTab][m.desc])}
+        ${getIcon(m.desc, iconMap[m.desc])}
         <div>
           <div class="mov-desc">${escapeHtml(m.desc)}</div>
           <div class="mov-meta">${fecha}</div>
+          ${noteHtml}
         </div>
       </div>
       <div style="display:flex; align-items:center;">
@@ -1208,6 +1308,42 @@ function render(){
 
 const CHART_COLORS = ['#e8b13d','#3fc481','#e2503e','#2fbfbf','#5089e6','#a86cf0','#e3609e','#e87b3e','#a87a24','#f3efe4'];
 
+// Arma un conic-gradient con una línea divisoria delgada entre cada
+// categoría, para que la gráfica se lea más limpia.
+function buildConicGradient(entries, total){
+  const n = entries.length;
+  const gapPct = n > 1 ? 0.9 : 0;
+  const scale = n > 1 ? (100 - gapPct * n) / 100 : 1;
+  let acc = 0;
+  const stops = [];
+  entries.forEach(([name, val], i)=>{
+    const pct = (total ? (val/total*100) : 0) * scale;
+    const start = acc;
+    const end = acc + pct;
+    stops.push(`${CHART_COLORS[i % CHART_COLORS.length]} ${start}% ${end}%`);
+    if(n > 1){
+      const gapEnd = end + gapPct;
+      stops.push(`var(--bg) ${end}% ${gapEnd}%`);
+      acc = gapEnd;
+    } else {
+      acc = end;
+    }
+  });
+  return `conic-gradient(${stops.join(',')})`;
+}
+
+function buildChartLegend(entries, total){
+  return entries.map(([name, val], i)=>{
+    const pct = total ? Math.round(val/total*100) : 0;
+    const color = CHART_COLORS[i % CHART_COLORS.length];
+    return `<div class="legend-row">
+      <span class="legend-dot" style="background:${color};"></span>
+      <span class="legend-name">${escapeHtml(name)}</span>
+      <span class="legend-pct">${pct}% · ${fmt(val)}</span>
+    </div>`;
+  }).join('');
+}
+
 function renderChart(list){
   const chartCard = document.getElementById('chartCard');
   if(!showChart){ chartCard.style.display = 'none'; return; }
@@ -1220,24 +1356,8 @@ function renderChart(list){
   const total = [...byDesc.values()].reduce((a,b)=>a+b, 0);
   const entries = [...byDesc.entries()].sort((a,b)=> b[1]-a[1]);
 
-  let acc = 0;
-  const stops = entries.map(([name, val], i)=>{
-    const pct = total ? (val/total*100) : 0;
-    const start = acc;
-    acc += pct;
-    return `${CHART_COLORS[i % CHART_COLORS.length]} ${start}% ${acc}%`;
-  });
-  document.getElementById('pieChart').style.background = `conic-gradient(${stops.join(',')})`;
-
-  document.getElementById('chartLegend').innerHTML = entries.map(([name, val], i)=>{
-    const pct = total ? Math.round(val/total*100) : 0;
-    const color = CHART_COLORS[i % CHART_COLORS.length];
-    return `<div class="legend-row">
-      <span class="legend-dot" style="background:${color};"></span>
-      <span class="legend-name">${escapeHtml(name)}</span>
-      <span class="legend-pct">${pct}% · ${fmt(val)}</span>
-    </div>`;
-  }).join('');
+  document.getElementById('pieChart').style.background = buildConicGradient(entries, total);
+  document.getElementById('chartLegend').innerHTML = buildChartLegend(entries, total);
 
   chartCard.style.display = '';
 }
@@ -1320,12 +1440,14 @@ function renderDebtList(){
     const color = `hsl(${Math.round(pct*120)}, 62%, 45%)`;
     const monthPayment = d.payments[month] || 0;
     const safe = escapeHtml(name);
+    const noteHtml = d.note ? `<div class="mov-note">${escapeHtml(d.note)}</div>` : '';
     return `<div class="debt-row" style="border-left-color:${color};" data-name="${safe}">
       <div class="debt-row-main" data-name="${safe}" style="flex:1;">
         ${getIcon(name, debtIcons[name])}
         <div class="debt-info">
           <div class="debt-name">${safe}</div>
           <div class="debt-meta">Deuda: ${fmt(d.totalDebt)} · Abono mes: ${fmt(monthPayment)} · <span class="pct" style="color:${color};">${Math.round(pct*100)}%</span></div>
+          ${noteHtml}
         </div>
       </div>
     </div>`;
@@ -1390,6 +1512,7 @@ function openDebtModal(name){
   document.getElementById('debtModalTitle').textContent = name;
   document.getElementById('debtModalIconPreview').innerHTML = getIcon(name, debtIcons[name]);
   document.getElementById('debtModalIconPicker').style.display = 'none';
+  document.getElementById('debtModalNote').value = debtData[name].note || '';
   const monthKeys = populateLunaMonths(debtModalMonth);
   const refMonth = lunaFilterMonth.value || currentMonthKey();
   debtModalMonth.value = monthKeys.includes(refMonth) ? refMonth : monthKeys[0];
@@ -1510,8 +1633,10 @@ document.getElementById('debtModalSave').addEventListener('click', async ()=>{
   const month = debtModalMonth.value;
   const totalDebt = parseFloat(debtModalTotal.value) || 0;
   const payment = parseFloat(debtModalPayment.value) || 0;
+  const note = document.getElementById('debtModalNote').value.trim();
   debtData[name].totalDebt = totalDebt;
   debtData[name].payments[month] = payment;
+  debtData[name].note = note;
   await saveDebtData();
   closeDebtModal();
   renderDebtList();
@@ -1540,24 +1665,8 @@ function renderLunaChart(){
   if(!entries.length){ chartCard.style.display = 'none'; return; }
 
   const total = entries.reduce((a,[,v])=>a+v, 0);
-  let acc = 0;
-  const stops = entries.map(([name, val], i)=>{
-    const pct = total ? (val/total*100) : 0;
-    const start = acc;
-    acc += pct;
-    return `${CHART_COLORS[i % CHART_COLORS.length]} ${start}% ${acc}%`;
-  });
-  document.getElementById('lunaPieChart').style.background = `conic-gradient(${stops.join(',')})`;
-
-  document.getElementById('lunaChartLegend').innerHTML = entries.map(([name, val], i)=>{
-    const pct = total ? Math.round(val/total*100) : 0;
-    const color = CHART_COLORS[i % CHART_COLORS.length];
-    return `<div class="legend-row">
-      <span class="legend-dot" style="background:${color};"></span>
-      <span class="legend-name">${escapeHtml(name)}</span>
-      <span class="legend-pct">${pct}% · ${fmt(val)}</span>
-    </div>`;
-  }).join('');
+  document.getElementById('lunaPieChart').style.background = buildConicGradient(entries, total);
+  document.getElementById('lunaChartLegend').innerHTML = buildChartLegend(entries, total);
 
   chartCard.style.display = '';
 }
@@ -1683,7 +1792,6 @@ renderThemeColorGrid();
 renderThemePreviewIcons();
 
 updateBalanceModeUI();
-document.getElementById('f-date').value = todayStr();
 loadData();
 loadDebts().then(()=>{
   populateLunaMonths(lunaFilterMonth);
