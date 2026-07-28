@@ -103,6 +103,10 @@
   .legend-name{ flex:1; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .legend-pct{ color:var(--text-dim); flex:0 0 auto; }
 
+  .section-title{
+    font-family: system-ui, sans-serif; font-size:20px; font-weight:700; color: var(--gold);
+    margin-bottom:16px; letter-spacing:0.3px;
+  }
   .filters{ display:flex; gap:10px; margin-bottom:20px; font-family: system-ui, sans-serif;}
   select{
     flex:1; background: var(--panel); color: var(--text); border:1px solid var(--border);
@@ -438,6 +442,8 @@
 
 <div id="lunaSection" class="wrap" style="display:none;">
 
+  <div class="section-title">Pendientes por pagar</div>
+
   <div class="filters">
     <select id="lunaFilterMonth"><option value="">Mes</option></select>
     <button type="button" class="day-filter-btn" id="lunaChartToggleBtn">📊 Gráfica</button>
@@ -454,7 +460,6 @@
   </div>
 
   <div class="items-block">
-    <div class="items-title">Pendientes por pagar</div>
     <div class="debt-list" id="debtList"></div>
     <div class="debt-add-row" id="debtAddRow">+ Agregar pendiente</div>
   </div>
@@ -1557,11 +1562,39 @@ const appModeSelect = document.getElementById('appModeSelect');
 const tomSection = document.getElementById('tomSection');
 const lunaSection = document.getElementById('lunaSection');
 const aparienciaSection = document.getElementById('aparienciaSection');
+
+// El botón atrás de Android debe regresar primero al menú TOM (si elegiste
+// Luna/Apariencia por error) y solo preguntar si salir cuando ya estás en TOM.
+let modeHistoryPushed = false;
+
+function goToMode(mode){
+  appMode = mode;
+  if(appModeSelect.value !== mode) appModeSelect.value = mode;
+  tomSection.style.display = mode === 'tom' ? '' : 'none';
+  lunaSection.style.display = mode === 'luna' ? '' : 'none';
+  aparienciaSection.style.display = mode === 'apariencia' ? '' : 'none';
+}
+
 appModeSelect.addEventListener('change', ()=>{
-  appMode = appModeSelect.value;
-  tomSection.style.display = appMode === 'tom' ? '' : 'none';
-  lunaSection.style.display = appMode === 'luna' ? '' : 'none';
-  aparienciaSection.style.display = appMode === 'apariencia' ? '' : 'none';
+  const newMode = appModeSelect.value;
+  if(newMode === 'tom' && modeHistoryPushed){
+    history.back();
+    return;
+  }
+  if(newMode !== 'tom'){
+    if(!modeHistoryPushed){
+      history.pushState({ tomAppMode: newMode }, '', '');
+      modeHistoryPushed = true;
+    } else {
+      history.replaceState({ tomAppMode: newMode }, '', '');
+    }
+  }
+  goToMode(newMode);
+});
+
+window.addEventListener('popstate', ()=>{
+  modeHistoryPushed = false;
+  goToMode('tom');
 });
 
 // --- Apariencia: paleta de colores personalizable ---
