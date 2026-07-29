@@ -657,7 +657,7 @@ document.getElementById('form').addEventListener('submit', async e=>{
   // La fecha es automática: el día de hoy, o el día activo en el filtro
   // "Días" si el usuario ya eligió uno (para cargar información pasada).
   const date = selectedDay || todayStr();
-  if(!desc || isNaN(amount)) return;
+  if(!desc || isNaN(amount) || amount <= 0) return;
 
   data[currentTab].push({ id: Date.now().toString(), desc, amount, type, date, note });
   await saveTab(currentTab);
@@ -705,7 +705,7 @@ document.getElementById('movModalSave').addEventListener('click', async ()=>{
   const type = document.getElementById('movModalType').value;
   const date = document.getElementById('movModalDate').value;
   const note = document.getElementById('movModalNote').value.trim();
-  if(!desc || isNaN(amount) || !date) return;
+  if(!desc || isNaN(amount) || amount <= 0 || !date) return;
   m.desc = desc;
   m.amount = amount;
   m.type = type;
@@ -778,11 +778,18 @@ function render(){
   }).join('');
 }
 
-const CHART_COLORS = ['#e8b13d','#3fc481','#e2503e','#2fbfbf','#5089e6','#a86cf0','#e3609e','#e87b3e','#a87a24','#f3efe4'];
+// Lee los colores del tema activo en vez de usar valores fijos, para que
+// la gráfica siempre combine con la paleta elegida en Apariencia.
+function getChartColors(){
+  const s = getComputedStyle(document.documentElement);
+  const v = (k) => (s.getPropertyValue('--'+k).trim() || '#888');
+  return [v('gold'), v('green'), v('red'), v('teal'), v('blue'), v('purple'), v('pink'), v('coral'), v('gold-dim'), v('text')];
+}
 
 // Arma un conic-gradient con una línea divisoria delgada entre cada
 // categoría, para que la gráfica se lea más limpia.
 function buildConicGradient(entries, total){
+  const colors = getChartColors();
   const n = entries.length;
   const gapPct = n > 1 ? 0.9 : 0;
   const scale = n > 1 ? (100 - gapPct * n) / 100 : 1;
@@ -792,7 +799,7 @@ function buildConicGradient(entries, total){
     const pct = (total ? (val/total*100) : 0) * scale;
     const start = acc;
     const end = acc + pct;
-    stops.push(`${CHART_COLORS[i % CHART_COLORS.length]} ${start}% ${end}%`);
+    stops.push(`${colors[i % colors.length]} ${start}% ${end}%`);
     if(n > 1){
       const gapEnd = end + gapPct;
       stops.push(`var(--bg) ${end}% ${gapEnd}%`);
@@ -805,9 +812,10 @@ function buildConicGradient(entries, total){
 }
 
 function buildChartLegend(entries, total){
+  const colors = getChartColors();
   return entries.map(([name, val], i)=>{
     const pct = total ? Math.round(val/total*100) : 0;
-    const color = CHART_COLORS[i % CHART_COLORS.length];
+    const color = colors[i % colors.length];
     return `<div class="legend-row">
       <span class="legend-dot" style="background:${color};"></span>
       <span class="legend-name">${escapeHtml(name)}</span>
@@ -1089,8 +1097,8 @@ document.getElementById('debtModalSave').addEventListener('click', async ()=>{
   const name = editingDebtName;
   if(!name) return;
   const month = debtModalMonth.value;
-  const totalDebt = parseFloat(debtModalTotal.value) || 0;
-  const payment = parseFloat(debtModalPayment.value) || 0;
+  const totalDebt = Math.max(0, parseFloat(debtModalTotal.value) || 0);
+  const payment = Math.max(0, parseFloat(debtModalPayment.value) || 0);
   const note = document.getElementById('debtModalNote').value.trim();
   debtData[name].totalDebt = totalDebt;
   debtData[name].payments[month] = payment;

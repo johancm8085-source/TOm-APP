@@ -121,7 +121,7 @@
 
   <form id="form">
     <input id="f-desc" type="text" placeholder="Descripción" required>
-    <input id="f-amount" type="number" step="0.01" placeholder="Monto" required>
+    <input id="f-amount" type="number" step="0.01" min="0.01" placeholder="Monto" required>
     <select id="f-type">
       <option value="out">Gasto</option>
       <option value="in">Ingreso</option>
@@ -144,7 +144,7 @@
       </div>
       <div class="debt-modal-field">
         <label>Monto</label>
-        <input type="number" step="0.01" id="movModalAmount">
+        <input type="number" step="0.01" min="0.01" id="movModalAmount">
       </div>
       <div class="debt-modal-field">
         <label>Tipo</label>
@@ -222,11 +222,11 @@
       </div>
       <div class="debt-modal-field">
         <label>Deuda total</label>
-        <input type="number" step="0.01" id="debtModalTotal" placeholder="0">
+        <input type="number" step="0.01" min="0" id="debtModalTotal" placeholder="0">
       </div>
       <div class="debt-modal-field">
         <label>Abono de este mes</label>
-        <input type="number" step="0.01" id="debtModalPayment" placeholder="0">
+        <input type="number" step="0.01" min="0" id="debtModalPayment" placeholder="0">
       </div>
       <div class="debt-modal-field">
         <label>Nota (opcional)</label>
