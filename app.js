@@ -170,7 +170,37 @@ const ICON_PATHS = {
   burger: '<path d="M3 8a7 3 0 0 1 14 0z M3 8h14 M3 11h14 M3 14h14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>',
   plate: '<path d="M10 3a7 7 0 1 0 0.01 0 M10 6a4 4 0 1 0 0.01 0"/>',
   suitcase: '<path d="M4 8h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z M7 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
-  candy: '<path d="M6 10 L3 7 V13 Z M14 10 L17 7 V13 Z M8 10a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/>'
+  candy: '<path d="M6 10 L3 7 V13 Z M14 10 L17 7 V13 Z M8 10a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/>',
+  phone: '<path d="M6 2h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M9 15h2"/>',
+  wifi: '<path d="M3 8a10 8 0 0 1 14 0 M6 11a6 5 0 0 1 8 0 M10 15a1 1 0 1 0 0.01 0"/>',
+  book: '<path d="M4 3h10v14H6a2 2 0 0 1-2-2V3z M14 3a2 2 0 0 1 2 2v12h-2"/>',
+  heart: '<path d="M10 17S3 12 3 7.5A3.5 3.5 0 0 1 10 6a3.5 3.5 0 0 1 7 1.5C17 12 10 17 10 17z"/>',
+  star: '<path d="M10 2l2.2 5.6 6 0.4-4.6 3.8 1.6 5.8L10 14.6 4.8 17.6l1.6-5.8L2 8l6-0.4z"/>',
+  car: '<path d="M3 12V8a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v4 M3 12h14v3H3z M5.5 15v1.5 M14.5 15v1.5 M6 9h8"/>',
+  plane: '<path d="M10 2v16 M3 8l7-2 7 2 M6 14l4-1 4 1"/>',
+  pill: '<path d="M5 9a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V9z M10 5v10"/>',
+  wrench: '<path d="M12 3a4 4 0 0 0-5 5L3 12l2 2 4-4a4 4 0 0 0 5-5l-2 2-2-2z"/>',
+  shirt: '<path d="M7 3L4 6l2 2 1-1v9h6V7l1 1 2-2-3-3-2 1h-2z"/>',
+  paw: '<path d="M6 8a1.3 1.3 0 1 0 0.01 0 M9 6a1.3 1.3 0 1 0 0.01 0 M12 6a1.3 1.3 0 1 0 0.01 0 M14.5 8.5a1.3 1.3 0 1 0 0.01 0 M10 10a4 3 0 0 0-4 3c0 1.8 2 1.8 4 1.8s4 0 4-1.8a4 3 0 0 0-4-3z"/>',
+  plant: '<path d="M10 18v-7 M10 11c-3 0-5-2-5-5 3 0 5 2 5 5z M10 11c3 0 5-2 5-5-3 0-5 2-5 5z M7 18h6"/>',
+  coffee: '<path d="M4 8h10v5a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8z M14 9h1.5a2 2 0 0 1 0 4H14"/>',
+  pizza: '<path d="M10 3L3 16h14L10 3z M8 12a1 1 0 1 0 0.01 0 M12 12a1 1 0 1 0 0.01 0"/>',
+  bank: '<path d="M3 8l7-5 7 5 M4 8v8 M16 8v8 M2 16h16 M7 11v4 M13 11v4"/>',
+  wallet: '<path d="M3 6a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6z M14 10h2v4h-2z"/>',
+  graph: '<path d="M3 17V3 M3 17h14 M6 14v-4 M9 14V7 M12 14v-6 M15 14v-3"/>',
+  bulb: '<path d="M10 2a5 5 0 0 0-3 9c1 0.8 1 1.5 1 2.5h4c0-1 0-1.7 1-2.5a5 5 0 0 0-3-9z M8 16h4"/>',
+  trash: '<path d="M4 6h12 M8 6V4h4v2 M6 6l1 11a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1l1-11"/>',
+  music: '<path d="M8 15a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M14 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M8 13V4l6-1v8"/>',
+  camera: '<path d="M3 7a1 1 0 0 1 1-1h2l1-2h6l1 2h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z M10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>',
+  gamepad: '<path d="M5 8h10a3 3 0 0 1 3 3v2a2 2 0 0 1-3.6 1.2L13 13H7l-1.4 1.2A2 2 0 0 1 2 13v-2a3 3 0 0 1 3-3z M6 10v2 M5 11h2 M14 10.5a0.7 0.7 0 1 0 0.01 0 M16 12a0.7 0.7 0 1 0 0.01 0"/>',
+  umbrella: '<path d="M3 9c0-3 2-7 7-7s7 4 7 7H3z M10 9v6a2 2 0 0 1-3 1.7"/>',
+  key: '<path d="M13 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M9.8 8.2L3 15v2h2v-2h2v-2h2"/>',
+  lock: '<path d="M5 9V6a5 5 0 0 1 10 0v3 M4 9h12v8H4z M10 12v3"/>',
+  clock: '<path d="M10 3a7 7 0 1 0 0.01 0 M10 6v4l3 2"/>',
+  pin: '<path d="M10 2a6 6 0 0 0-6 6c0 5 6 10 6 10s6-5 6-10a6 6 0 0 0-6-6z M10 10.5a2.5 2.5 0 1 0 0.01 0"/>',
+  baby: '<path d="M10 3a3 3 0 1 0 0.01 0 M6 10a4 4 0 0 1 8 0v4a4 4 0 0 1-8 0v-4z M8 10a0.6 0.6 0 1 0 0.01 0 M12 10a0.6 0.6 0 1 0 0.01 0"/>',
+  laptop: '<path d="M4 5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H4V5z M2 15h16l-1.5 2h-13z"/>',
+  gift: '<path d="M3 8h14v3H3z M4 11h12v7H4z M10 8v10 M10 8c-1-3-5-4-5-1.5S8 8 10 8 M10 8c1-3 5-4 5-1.5S12 8 10 8"/>'
 };
 
 const ITEM_ICON_MAP = {
@@ -219,7 +249,13 @@ const ICON_CHOICES = [
   ['house','amber'], ['gas','coral'], ['cat','teal'], ['tray','teal'], ['bowl','green'],
   ['cart','green'], ['oil','coral'], ['spray','blue'], ['tag','text-dim'], ['coin','amber'],
   ['card','blue'], ['store','purple'], ['icecream','pink'], ['burger','coral'], ['plate','amber'],
-  ['suitcase','teal'], ['candy','pink']
+  ['suitcase','teal'], ['candy','pink'],
+  ['phone','teal'], ['wifi','blue'], ['book','coral'], ['heart','pink'], ['star','amber'],
+  ['car','blue'], ['plane','teal'], ['pill','red'], ['wrench','text-dim'], ['shirt','purple'],
+  ['paw','coral'], ['plant','green'], ['coffee','coral'], ['pizza','amber'], ['bank','blue'],
+  ['wallet','amber'], ['graph','green'], ['bulb','amber'], ['trash','text-dim'], ['music','purple'],
+  ['camera','teal'], ['gamepad','purple'], ['umbrella','blue'], ['key','amber'], ['lock','purple'],
+  ['clock','blue'], ['pin','coral'], ['baby','pink'], ['laptop','blue'], ['gift','pink']
 ];
 
 function buildIconPickerHTML(currentOverride){
@@ -336,7 +372,9 @@ const filterDayBtn = document.getElementById('filterDayBtn');
 const dayModalBackdrop = document.getElementById('dayModalBackdrop');
 const dayModalGrid = document.getElementById('dayModalGrid');
 const dayModalClose = document.getElementById('dayModalClose');
-let selectedDay = '';
+// Por defecto se filtra por HOY (cada día es independiente); "Todos los
+// días" queda como una opción explícita más en el selector de días.
+let selectedDay = todayStr();
 
 fMonth.addEventListener('change', ()=>{ selectedDay=''; populateDays(); render(); });
 
@@ -404,9 +442,18 @@ function updateDayButtonLabel(){
   filterDayBtn.textContent = new Date(selectedDay+'T00:00').toLocaleDateString('es-ES',{day:'numeric', month:'short'});
 }
 
+const WEEKDAY_LETTERS = ['L','M','X','J','V','S','D'];
+
 function renderDayModalGrid(){
   const list = window.__dayList || [];
-  let html = `<div class="day-chip all-chip${selectedDay?'':' active'}" data-day="">Todos los días</div>`;
+  let html = WEEKDAY_LETTERS.map(w=>`<div class="day-chip-header">${w}</div>`).join('');
+  html += `<div class="day-chip all-chip${selectedDay?'':' active'}" data-day="">Todos los días</div>`;
+  if(list.length){
+    const [y, mo, d1] = list[0].split('-').map(Number);
+    const firstDow = new Date(y, mo-1, d1).getDay(); // 0=domingo..6=sábado
+    const leadingBlanks = (firstDow + 6) % 7; // 0=lunes..6=domingo
+    for(let i=0;i<leadingBlanks;i++){ html += `<div class="day-chip-blank"></div>`; }
+  }
   html += list.map(d=>{
     const dayNum = parseInt(d.slice(-2), 10);
     const active = d===selectedDay ? ' active' : '';

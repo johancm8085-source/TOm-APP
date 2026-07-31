@@ -148,7 +148,12 @@
   }
   .modal-close{ background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer; padding:0; }
   .modal-close:hover{ color:var(--red); }
-  .modal-days-grid{ display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; }
+  .modal-days-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:8px; }
+  .day-chip-header{
+    text-align:center; font-size:12px; font-weight:600; color:var(--text-dim);
+    text-transform:uppercase; padding-bottom:2px;
+  }
+  .day-chip-blank{ pointer-events:none; }
   .day-chip{
     background: var(--panel); border:1px solid var(--border); border-radius:10px;
     padding:10px 6px; text-align:center; cursor:pointer; font-size:13px; color:var(--text);
