@@ -121,6 +121,14 @@
     flex:1; background: var(--panel); color: var(--text); border:1px solid var(--border);
     border-radius:10px; padding:12px 14px; font-size:15px; font-family: system-ui, sans-serif;
   }
+  .filters input[type="text"]{
+    flex:1.6; background: var(--panel); color: var(--text); border:1px solid var(--border);
+    border-radius:10px; padding:12px 14px; font-size:15px; font-family: system-ui, sans-serif;
+  }
+  .filters input[type="text"]:focus{
+    outline:none; border-color: var(--gold);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 22%, transparent);
+  }
   .day-filter-btn{
     position:relative; overflow:hidden;
     flex:1; background: var(--panel); color: var(--text); border:1px solid var(--border);
@@ -344,3 +352,107 @@
   }
   .theme-badge.in{ background: color-mix(in srgb, var(--green) 20%, transparent); color: var(--green); }
   .theme-badge.out{ background: color-mix(in srgb, var(--red) 20%, transparent); color: var(--red); }
+
+  /* --- Aviso inteligente (insights) --- */
+  .insights-banner{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; font-family: system-ui, sans-serif; }
+  .insight-chip{
+    border-radius:12px; padding:10px 14px; font-size:13.5px; font-weight:600; line-height:1.4;
+    border:1px solid var(--border);
+  }
+  .insight-chip.warn{ background: color-mix(in srgb, var(--gold) 14%, transparent); color: var(--gold); border-color: color-mix(in srgb, var(--gold) 40%, transparent); }
+  .insight-chip.danger{ background: color-mix(in srgb, var(--red) 14%, transparent); color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, transparent); }
+
+  /* --- Meta de ahorro / presupuesto mensual --- */
+  .goal-card{
+    background: var(--panel); border:1px solid var(--border); border-radius:16px;
+    padding:14px 16px; margin-bottom:16px; font-family: system-ui, sans-serif; cursor:pointer;
+  }
+  .goal-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .goal-title{ font-size:14px; font-weight:700; color:var(--text); }
+  .goal-edit-hint{ font-size:11px; color:var(--text-dim); }
+  .goal-amounts{ font-size:15px; margin-bottom:8px; }
+  .goal-amounts .goal-sep{ color:var(--text-dim); margin:0 4px; font-size:12px; }
+  .goal-target{ color:var(--gold); font-weight:600; }
+  .goal-edit-input{
+    font-size:15px; background: var(--panel-2); color:var(--gold); border:1px solid var(--gold);
+    border-radius:6px; padding:2px 8px; width:140px; font-family: system-ui, sans-serif;
+  }
+  .goal-bar-track{ height:8px; border-radius:6px; background: var(--panel-2); overflow:hidden; }
+  .goal-bar-fill{ height:100%; background: var(--green); border-radius:6px; transition: width .2s; width:0%; }
+  .goal-bar-fill.warn{ background: var(--gold); }
+  .goal-bar-fill.danger{ background: var(--red); }
+  .goal-pct{ font-size:11.5px; color:var(--text-dim); margin-top:6px; text-align:right; }
+
+  /* --- Puntos en el calendario para días con movimientos --- */
+  .day-chip{ position:relative; }
+  .day-chip-dot{
+    position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
+    width:4px; height:4px; border-radius:50%; background: var(--gold);
+  }
+  .day-chip.active .day-chip-dot{ background: var(--bg); }
+
+  /* --- Insignias de movimiento (gasto alto / recurrente) --- */
+  .mov-badges{ display:flex; gap:6px; margin-top:4px; flex-wrap:wrap; }
+  .mov-badge{
+    font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:999px;
+  }
+  .mov-badge.high{ background: color-mix(in srgb, var(--red) 18%, transparent); color: var(--red); }
+  .mov-badge.recurring{ background: color-mix(in srgb, var(--teal) 18%, transparent); color: var(--teal); }
+
+  /* --- Herramientas de datos (exportar/backup) --- */
+  .data-tools-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  .data-tools-grid button{ width:100%; }
+
+  /* --- Estadísticas avanzadas --- */
+  .stats-view-strip{
+    display:flex; gap:8px; overflow-x:auto; margin-bottom:18px; padding-bottom:4px;
+    font-family: system-ui, sans-serif; -webkit-overflow-scrolling:touch;
+  }
+  .stats-view-strip::-webkit-scrollbar{ height:4px; }
+  .stats-view-pill{
+    flex:0 0 auto; background: var(--panel); border:1px solid var(--border); color:var(--text-dim);
+    border-radius:999px; padding:9px 15px; font-size:13px; white-space:nowrap; cursor:pointer;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .stats-view-pill.active{ background: var(--gold-dim); color: var(--bg); border-color:var(--gold-dim); font-weight:600; }
+  .stats-card{
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border:1px solid var(--border); border-radius:18px; padding:18px; margin-bottom:16px;
+    font-family: system-ui, sans-serif; box-shadow: var(--shadow-sm);
+  }
+  .stats-big-card{ text-align:center; padding:6px 0; }
+  .stats-big-label{ font-size:12.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px; }
+  .stats-big-value{ font-size:34px; font-weight:700; color:var(--text); line-height:1.1; }
+  .stats-big-card.positive .stats-big-value{ color: var(--green); }
+  .stats-big-card.negative .stats-big-value{ color: var(--red); }
+  .stats-big-sub{ font-size:13px; color:var(--text-dim); margin-top:8px; }
+
+  .stats-legend-inline{ display:flex; gap:16px; font-size:12.5px; color:var(--text-dim); margin-bottom:12px; }
+  .stats-legend-inline span{ display:flex; align-items:center; gap:6px; }
+  .stats-legend-inline i{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+
+  .stats-bars{ display:flex; align-items:flex-end; gap:8px; height:150px; overflow-x:auto; padding-top:18px; }
+  .stats-bar-col{ flex:1 0 34px; display:flex; flex-direction:column; align-items:center; height:100%; min-width:34px; }
+  .stats-bar-col.clickable{ cursor:pointer; }
+  .stats-bar-value-top{ font-size:9.5px; color:var(--text-dim); margin-bottom:3px; white-space:nowrap; }
+  .stats-bar-track{
+    flex:1; width:100%; max-width:26px; display:flex; align-items:flex-end; justify-content:center;
+    background: var(--panel-2); border-radius:6px; overflow:hidden;
+  }
+  .stats-bar-track.grouped{ display:flex; flex-direction:row; align-items:flex-end; gap:2px; max-width:34px; background:none; }
+  .stats-bar-track.grouped .stats-bar-fill{ width:12px; border-radius:4px 4px 0 0; }
+  .stats-bar-fill{ width:100%; border-radius:6px 6px 0 0; transition: height .2s; min-height:2px; }
+  .stats-bar-label{ font-size:10.5px; color:var(--text-dim); margin-top:6px; text-align:center; }
+
+  .stats-line-svg{ width:100%; height:130px; display:block; }
+  .stats-line-labels{ display:flex; justify-content:space-between; font-size:10px; color:var(--text-dim); margin-top:4px; }
+  .stats-trend-text{ margin-top:12px; font-size:14px; font-weight:600; color:var(--gold); text-align:center; }
+
+  .legend-row.clickable{ cursor:pointer; border-radius:8px; padding:4px 6px; margin:-4px -6px; transition: background .12s; }
+  .legend-row.clickable:hover{ background: var(--panel); }
+
+  @media print{
+    #appModeSelect, .logo, .filters, .day-filter-btn, form, .btn-secondary, .data-tools-grid, button{ display:none !important; }
+    body{ background:#fff; color:#000; padding:10px; }
+    .mov, .stats-card, .balance-card{ break-inside: avoid; border-color:#ccc; }
+  }

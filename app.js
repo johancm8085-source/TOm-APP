@@ -11,6 +11,11 @@ const THEME_PRESETS = {
     name: 'Dorado Clásico',
     bg:'#14120f', panel:'#1c1a16', border:'#3a3226', gold:'#e8b13d', 'gold-dim':'#a87a24',
     accent:'#e87b3e', text:'#f3efe4', 'text-dim':'#a39d8c', green:'#3fc481', red:'#e2503e'
+  },
+  claro: {
+    name: 'Claro',
+    bg:'#f5f3ef', panel:'#ffffff', border:'#e2ded4', gold:'#d97706', 'gold-dim':'#b45309',
+    accent:'#ea580c', text:'#1f1b16', 'text-dim':'#6b6255', green:'#16a34a', red:'#dc2626'
   }
 };
 
@@ -73,6 +78,8 @@ let incomeItemIcons = { gastos: {}, entretenimiento: {}, ahorro: {} }; // name -
 let initialBalance = { gastos: 0, entretenimiento: 0, ahorro: 0 };
 let balanceMode = 'saldo';
 let showChart = false;
+let monthlyBudget = { gastos: 0, entretenimiento: 0, ahorro: 0 };
+let savingsGoal = 0;
 
 let appMode = 'tom';
 const DEBT_DEFAULT_ITEMS = ['Mama','Tarjeta','Prestamos','Parqueadero','Servicio','Arriendo'];
@@ -121,6 +128,18 @@ let confirmModalCallback = null;
 function showConfirm(message, onYes){
   document.getElementById('confirmModalMessage').textContent = message;
   confirmModalCallback = onYes;
+  document.getElementById('confirmModalNo').style.display = '';
+  document.getElementById('confirmModalYes').textContent = '✓ Confirmar';
+  confirmModalBackdrop.classList.add('open');
+}
+
+// Aviso de un solo botón, reutilizando el mismo modal de confirmación
+// (no hay alert() nativo disponible en el WebView de Android).
+function showAlert(message){
+  document.getElementById('confirmModalMessage').textContent = message;
+  confirmModalCallback = null;
+  document.getElementById('confirmModalNo').style.display = 'none';
+  document.getElementById('confirmModalYes').textContent = '✓ Entendido';
   confirmModalBackdrop.classList.add('open');
 }
 
@@ -200,7 +219,30 @@ const ICON_PATHS = {
   pin: '<path d="M10 2a6 6 0 0 0-6 6c0 5 6 10 6 10s6-5 6-10a6 6 0 0 0-6-6z M10 10.5a2.5 2.5 0 1 0 0.01 0"/>',
   baby: '<path d="M10 3a3 3 0 1 0 0.01 0 M6 10a4 4 0 0 1 8 0v4a4 4 0 0 1-8 0v-4z M8 10a0.6 0.6 0 1 0 0.01 0 M12 10a0.6 0.6 0 1 0 0.01 0"/>',
   laptop: '<path d="M4 5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H4V5z M2 15h16l-1.5 2h-13z"/>',
-  gift: '<path d="M3 8h14v3H3z M4 11h12v7H4z M10 8v10 M10 8c-1-3-5-4-5-1.5S8 8 10 8 M10 8c1-3 5-4 5-1.5S12 8 10 8"/>'
+  gift: '<path d="M3 8h14v3H3z M4 11h12v7H4z M10 8v10 M10 8c-1-3-5-4-5-1.5S8 8 10 8 M10 8c1-3 5-4 5-1.5S12 8 10 8"/>',
+  moto: '<path d="M4 15a2 2 0 1 0 0.01 0 M16 15a2 2 0 1 0 0.01 0 M4 15h2l2-4h4l2 4h4 M8 11l2-3h3 M11 8h3l2 3"/>',
+  bus: '<path d="M3 6a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v8H3V6z M3 14h14v2H3z M5.5 16.5v1.5 M14.5 16.5v1.5 M3 10h14 M6 8h2 M12 8h2"/>',
+  drop: '<path d="M10 2c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10z"/>',
+  bolt: '<path d="M11 2L4 12h5l-1 6 8-11h-5l1-5z"/>',
+  flame: '<path d="M10 2c1 3-2 4-2 7a2 2 0 0 0 4 0c0-1-1-2-1-3 2 1 3 3 3 5a4 4 0 0 1-8 0c0-4 3-6 4-9z"/>',
+  cap: '<path d="M2 8l8-4 8 4-8 4-8-4z M6 10v4c0 1 2 2 4 2s4-1 4-2v-4 M18 8v5"/>',
+  hotelbed: '<path d="M3 17v-7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1 M11 11v-1a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v7 M3 14h16 M3 17v-3 M17 17v-3 M5 10a1 1 0 1 0 0.01 0"/>',
+  dog: '<path d="M4 6l2 3 M16 6l-2 3 M6 9a4 4 0 0 1 8 0v3a4 4 0 0 1-8 0V9z M7.5 10a0.6 0.6 0 1 0 0.01 0 M12.5 10a0.6 0.6 0 1 0 0.01 0 M9 13h2"/>',
+  medcross: '<path d="M4 4h12a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z M10 7v6 M7 10h6"/>',
+  streaming: '<path d="M5 3.5a1 1 0 0 1 1.5-0.86l9.5 5.5a1 1 0 0 1 0 1.72l-9.5 5.5A1 1 0 0 1 5 14.5v-11z"/>',
+  soundwave: '<path d="M4 12V8 M8 15V5 M12 12V8 M16 15V5"/>',
+  monitor: '<path d="M3 4h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z M8 17h4 M10 14v3"/>',
+  shoe: '<path d="M3 14v-3c2 0 3-1 4-2l2-2 2 2h4a2 2 0 0 1 2 2v3z M3 14h14v2H4a1 1 0 0 1-1-1v-1z M9 7l2 2"/>',
+  family: '<path d="M6 9a2 2 0 1 0 0.01 0 M14 9a2 2 0 1 0 0.01 0 M2 17v-2a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v2 M10 17v-2a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v2"/>',
+  forkknife: '<path d="M5 2v6a1.5 1.5 0 0 0 3 0V2 M6.5 8v10 M13 2c-1 0-2 1.5-2 3.5S12 9 13 9v9"/>',
+  cup: '<path d="M5 3h8l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 3z M13 6h2a2 2 0 0 1 0 4h-2"/>',
+  dumbbell: '<path d="M3 9h2v4H3z M15 9h2v4h-2z M6 7v8 M14 7v8 M6 10.5h8"/>',
+  shield: '<path d="M10 2l7 3v5c0 5-3.5 7.5-7 8-3.5-0.5-7-3-7-8V5l7-3z M7 10l2 2 4-4"/>',
+  receipt: '<path d="M5 2h10v16l-2-1.5L11 18l-2-1.5L7 18l-2-1.5V2z M7 6h6 M7 9h6 M7 12h4"/>',
+  piggybank: '<path d="M4 11a5 4 0 0 1 5-4h3a4 4 0 0 1 4 4v1a1 1 0 0 1-1 1h-1v2h-2v-2H8v2H6v-2a3 3 0 0 1-2-2.8z M14 8V6l2 1 M6.5 10a0.6 0.6 0 1 0 0.01 0"/>',
+  crypto: '<path d="M10 3a7 7 0 1 0 0.01 0 M8 6v8 M7.5 7h3a1.5 1.5 0 0 1 0 3h-3.5 M7 10h3.5a1.5 1.5 0 0 1 0 3H7.5 M9 5.5V7 M9 13v1.5"/>',
+  toolbox: '<path d="M3 8a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8z M7 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2 M3 11h14"/>',
+  briefcase: '<path d="M4 7h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z M8 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2 M9 10h2v2H9z"/>'
 };
 
 const ITEM_ICON_MAP = {
@@ -226,7 +268,55 @@ const ITEM_ICON_MAP = {
   'parqueadero': ['suitcase','coral'],
   'servicio': ['spray','teal'],
   'sueldo': ['coin','green'],
-  'emprendimiento': ['store','green']
+  'emprendimiento': ['store','green'],
+  'moto': ['moto','coral'],
+  'transporte': ['bus','blue'],
+  'bus': ['bus','blue'],
+  'carro': ['car','purple'],
+  'agua': ['drop','blue'],
+  'luz': ['bolt','amber'],
+  'gas': ['flame','red'],
+  'hipoteca': ['house','red'],
+  'educacion': ['cap','blue'],
+  'educación': ['cap','blue'],
+  'hotel': ['hotelbed','purple'],
+  'perro': ['dog','coral'],
+  'perros': ['dog','coral'],
+  'veterinario': ['medcross','teal'],
+  'farmacia': ['medcross','green'],
+  'salud': ['medcross','red'],
+  'netflix': ['streaming','red'],
+  'spotify': ['soundwave','green'],
+  'steam': ['streaming','blue'],
+  'xbox': ['streaming','green'],
+  'playstation': ['streaming','purple'],
+  'pc': ['monitor','text-dim'],
+  'celular': ['phone','purple'],
+  'internet': ['wifi','purple'],
+  'zapatos': ['shoe','amber'],
+  'familia': ['family','teal'],
+  'niños': ['baby','blue'],
+  'ninos': ['baby','blue'],
+  'restaurantes': ['forkknife','coral'],
+  'restaurante': ['forkknife','coral'],
+  'cafe': ['coffee','amber'],
+  'café': ['coffee','amber'],
+  'bebidas': ['cup','pink'],
+  'gimnasio': ['dumbbell','green'],
+  'seguros': ['shield','blue'],
+  'seguro': ['shield','blue'],
+  'impuestos': ['receipt','text-dim'],
+  'inversiones': ['graph','purple'],
+  'ahorro': ['piggybank','green'],
+  'criptomonedas': ['crypto','amber'],
+  'cripto': ['crypto','amber'],
+  'banco': ['bank','purple'],
+  'tarjetas': ['card','purple'],
+  'préstamos': ['coin','coral'],
+  'entretenimiento': ['gamepad','coral'],
+  'trabajo': ['briefcase','blue'],
+  'freelance': ['laptop','coral'],
+  'herramientas': ['toolbox','amber']
 };
 
 function getIcon(name, overrideKey){
@@ -255,7 +345,15 @@ const ICON_CHOICES = [
   ['paw','coral'], ['plant','green'], ['coffee','coral'], ['pizza','amber'], ['bank','blue'],
   ['wallet','amber'], ['graph','green'], ['bulb','amber'], ['trash','text-dim'], ['music','purple'],
   ['camera','teal'], ['gamepad','purple'], ['umbrella','blue'], ['key','amber'], ['lock','purple'],
-  ['clock','blue'], ['pin','coral'], ['baby','pink'], ['laptop','blue'], ['gift','pink']
+  ['clock','blue'], ['pin','coral'], ['baby','pink'], ['laptop','blue'], ['gift','pink'],
+  ['moto','coral'], ['car','purple'], ['bus','blue'], ['drop','blue'], ['bolt','amber'],
+  ['flame','red'], ['cap','blue'], ['hotelbed','purple'], ['dog','coral'], ['medcross','red'],
+  ['medcross','green'], ['medcross','teal'], ['streaming','red'], ['soundwave','green'], ['streaming','blue'],
+  ['streaming','green'], ['streaming','purple'], ['monitor','text-dim'], ['phone','purple'], ['wifi','purple'],
+  ['house','red'], ['shoe','amber'], ['family','teal'], ['baby','blue'], ['forkknife','coral'],
+  ['coffee','amber'], ['cup','pink'], ['dumbbell','green'], ['shield','blue'], ['receipt','text-dim'],
+  ['graph','purple'], ['piggybank','green'], ['crypto','amber'], ['bank','purple'], ['card','purple'],
+  ['coin','coral'], ['gamepad','coral'], ['briefcase','blue'], ['laptop','coral'], ['toolbox','amber']
 ];
 
 function buildIconPickerHTML(currentOverride){
@@ -305,10 +403,20 @@ async function loadData(){
       const r3 = await window.storage.get('initialBalance:'+t);
       initialBalance[t] = r3 ? parseFloat(r3.value) || 0 : 0;
     }catch(e){ initialBalance[t] = 0; }
+    monthlyBudget[t] = await storageGetJSON('budget:'+t, 0);
   }
+  savingsGoal = await storageGetJSON('savingsGoal', 0);
   populateFilters();
   renderMenu();
   render();
+}
+
+async function saveBudget(t){
+  await storageSetJSON('budget:'+t, monthlyBudget[t], 'Error guardando presupuesto');
+}
+
+async function saveSavingsGoal(){
+  await storageSetJSON('savingsGoal', savingsGoal, 'Error guardando meta de ahorro');
 }
 
 async function saveTab(t){
@@ -454,10 +562,12 @@ function renderDayModalGrid(){
     const leadingBlanks = (firstDow + 6) % 7; // 0=lunes..6=domingo
     for(let i=0;i<leadingBlanks;i++){ html += `<div class="day-chip-blank"></div>`; }
   }
+  const daysWithMovs = new Set(data[currentTab].map(m=>m.date));
   html += list.map(d=>{
     const dayNum = parseInt(d.slice(-2), 10);
     const active = d===selectedDay ? ' active' : '';
-    return `<div class="day-chip${active}" data-day="${d}">${dayNum}</div>`;
+    const dot = daysWithMovs.has(d) ? '<span class="day-chip-dot"></span>' : '';
+    return `<div class="day-chip${active}" data-day="${d}">${dayNum}${dot}</div>`;
   }).join('');
   dayModalGrid.innerHTML = html;
   dayModalGrid.querySelectorAll('.day-chip').forEach(chip=>{
@@ -470,6 +580,26 @@ function renderDayModalGrid(){
     });
   });
 }
+
+// Gestión automática del tiempo: si el día cambió mientras la app estaba
+// cerrada/en segundo plano, el filtro vuelve solo a "hoy" al reabrir o
+// recuperar el foco. Nunca se tocan las fechas ya guardadas en los
+// movimientos: solo se mueve el filtro de visualización.
+let __lastKnownToday = todayStr();
+function checkDateRollover(){
+  const now = todayStr();
+  if(now === __lastKnownToday) return;
+  const wasTrackingToday = (selectedDay === __lastKnownToday);
+  __lastKnownToday = now;
+  if(wasTrackingToday){
+    selectedDay = now;
+    populateFilters();
+    render();
+  }
+}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkDateRollover(); });
+window.addEventListener('focus', checkDateRollover);
+window.addEventListener('pageshow', checkDateRollover);
 
 const balanceModeSelect = document.getElementById('balanceModeSelect');
 const balanceEditHint = document.getElementById('balanceEditHint');
@@ -768,13 +898,153 @@ function fmt(n){
   return '$' + Number(n).toLocaleString('es-CO', {maximumFractionDigits:0});
 }
 
+// Duplicar un movimiento existente con la fecha de hoy: es el mecanismo de
+// "reutilizar un gasto repetitivo" que pide el módulo de inteligencia.
+async function duplicateMov(id){
+  const m = data[currentTab].find(x=>x.id===id);
+  if(!m) return;
+  data[currentTab].push({ ...m, id: Date.now().toString(), date: todayStr() });
+  await saveTab(currentTab);
+  populateFilters();
+  render();
+}
+
+// Un gasto es "recurrente" si su descripción aparece en al menos 2 meses
+// distintos del historial de la pestaña activa.
+function isRecurring(desc){
+  const months = new Set();
+  data[currentTab].forEach(m=>{ if(m.type==='out' && m.desc===desc) months.add(m.date.slice(0,7)); });
+  return months.size >= 2;
+}
+
+function computeTabBalance(t){
+  let total = initialBalance[t];
+  data[t].forEach(m=>{ total += m.type==='in' ? m.amount : -m.amount; });
+  return total;
+}
+
+// Compara el mes activo contra el anterior y contra el presupuesto fijado
+// para avisar de gastos anormalmente altos o presupuestos por agotarse.
+function computeInsights(){
+  const insights = [];
+  const monthKey = fMonth.value || todayStr().slice(0,7);
+  const [y, mo] = monthKey.split('-').map(Number);
+  const thisMonthOut = data[currentTab].filter(m=>m.type==='out' && m.date.slice(0,7)===monthKey).reduce((s,m)=>s+m.amount,0);
+  const prevDate = new Date(y, mo-2, 1);
+  const prevKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
+  const prevMonthOut = data[currentTab].filter(m=>m.type==='out' && m.date.slice(0,7)===prevKey).reduce((s,m)=>s+m.amount,0);
+  if(prevMonthOut > 0 && thisMonthOut > prevMonthOut * 1.3){
+    const pct = Math.round((thisMonthOut/prevMonthOut - 1) * 100);
+    insights.push({ level:'warn', text:`📈 Este mes vas ${pct}% más alto en gastos que el mes pasado.` });
+  }
+  const budget = monthlyBudget[currentTab] || 0;
+  if(budget > 0){
+    const pct = thisMonthOut / budget;
+    if(pct >= 1) insights.push({ level:'danger', text:`🔔 Superaste tu presupuesto del mes: ${fmt(thisMonthOut)} de ${fmt(budget)}.` });
+    else if(pct >= 0.8) insights.push({ level:'warn', text:`🔔 Vas en el ${Math.round(pct*100)}% de tu presupuesto del mes.` });
+  }
+  return insights;
+}
+
+function renderInsights(){
+  const banner = document.getElementById('insightsBanner');
+  const insights = computeInsights();
+  if(!insights.length){ banner.style.display = 'none'; banner.innerHTML = ''; return; }
+  banner.innerHTML = insights.map(i=>`<div class="insight-chip ${i.level}">${escapeHtml(i.text)}</div>`).join('');
+  banner.style.display = 'flex';
+}
+
+// Reemplaza un valor mostrado por un input numérico editable in-place
+// (mismo patrón que el saldo inicial), para fijar meta de ahorro y presupuesto
+// sin depender de prompt()/alert() nativos (no funcionan en el WebView de Android).
+function editAmountInline(displayElId, currentVal, onSave){
+  const el = document.getElementById(displayElId);
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.step = '0.01';
+  input.min = '0';
+  input.value = currentVal || '';
+  input.className = 'goal-edit-input';
+  input.addEventListener('click', e=> e.stopPropagation());
+  el.replaceWith(input);
+  input.focus();
+  input.select();
+  let done = false;
+  async function commit(){
+    if(done) return; done = true;
+    const val = Math.max(0, parseFloat(input.value) || 0);
+    input.replaceWith(el);
+    await onSave(val);
+  }
+  function cancel(){
+    if(done) return; done = true;
+    input.replaceWith(el);
+  }
+  input.addEventListener('keydown', e=>{
+    if(e.key === 'Enter'){ e.preventDefault(); commit(); }
+    if(e.key === 'Escape'){ cancel(); }
+  });
+  input.addEventListener('blur', commit);
+}
+
+function updateGoalAndBudgetCards(){
+  const goalCard = document.getElementById('savingsGoalCard');
+  const budgetCard = document.getElementById('budgetCard');
+  if(currentTab === 'ahorro'){
+    goalCard.style.display = '';
+    budgetCard.style.display = 'none';
+    const current = Math.max(0, computeTabBalance('ahorro'));
+    document.getElementById('savingsGoalCurrent').textContent = fmt(current);
+    document.getElementById('savingsGoalTarget').textContent = fmt(savingsGoal);
+    const pct = savingsGoal > 0 ? Math.min(100, Math.round(current/savingsGoal*100)) : 0;
+    document.getElementById('savingsGoalBar').style.width = pct + '%';
+    document.getElementById('savingsGoalPct').textContent = savingsGoal > 0 ? pct + '% de tu meta' : 'Toca el monto para fijar una meta';
+  } else {
+    goalCard.style.display = 'none';
+    budgetCard.style.display = '';
+    const monthKey = fMonth.value || todayStr().slice(0,7);
+    const spent = data[currentTab].filter(m=>m.type==='out' && m.date.slice(0,7)===monthKey).reduce((s,m)=>s+m.amount,0);
+    const budget = monthlyBudget[currentTab] || 0;
+    document.getElementById('budgetCurrent').textContent = fmt(spent);
+    document.getElementById('budgetTarget').textContent = fmt(budget);
+    const pct = budget > 0 ? Math.min(100, Math.round(spent/budget*100)) : 0;
+    const bar = document.getElementById('budgetBar');
+    bar.style.width = pct + '%';
+    bar.classList.toggle('danger', budget > 0 && spent >= budget);
+    bar.classList.toggle('warn', budget > 0 && spent < budget && spent/budget >= 0.8);
+    document.getElementById('budgetPct').textContent = budget > 0 ? pct + '% usado' : 'Toca el monto para fijar un presupuesto';
+  }
+}
+
+document.getElementById('savingsGoalCard').addEventListener('click', (e)=>{
+  if(e.target.tagName === 'INPUT') return;
+  editAmountInline('savingsGoalTarget', savingsGoal, async (val)=>{
+    savingsGoal = val;
+    await saveSavingsGoal();
+    render();
+  });
+});
+
+document.getElementById('budgetCard').addEventListener('click', (e)=>{
+  if(e.target.tagName === 'INPUT') return;
+  editAmountInline('budgetTarget', monthlyBudget[currentTab], async (val)=>{
+    monthlyBudget[currentTab] = val;
+    await saveBudget(currentTab);
+    render();
+  });
+});
+
+const searchInput = document.getElementById('searchInput');
+const sortSelect = document.getElementById('sortSelect');
+searchInput.addEventListener('input', render);
+sortSelect.addEventListener('change', render);
+
 function render(){
   const month = fMonth.value;
   const day = selectedDay;
   const list = data[currentTab]
     .filter(m => !month || m.date.slice(0,7) === month)
-    .filter(m => !day || m.date === day)
-    .sort((a,b)=> b.date.localeCompare(a.date));
+    .filter(m => !day || m.date === day);
 
   let totalIn=0, totalOut=0;
   list.forEach(m=>{
@@ -797,16 +1067,35 @@ function render(){
   netChip.classList.toggle('negative', net < 0);
 
   renderChart(list);
+  renderInsights();
+  updateGoalAndBudgetCards();
+
+  const searchQ = (searchInput.value || '').trim().toLowerCase();
+  const sortMode = sortSelect.value;
+  let displayList = list.filter(m => !searchQ || m.desc.toLowerCase().includes(searchQ) || (m.note||'').toLowerCase().includes(searchQ));
+  displayList = displayList.slice().sort((a,b)=>{
+    if(sortMode === 'date-asc') return a.date.localeCompare(b.date) || a.id.localeCompare(b.id);
+    if(sortMode === 'amount-desc') return b.amount - a.amount;
+    if(sortMode === 'amount-asc') return a.amount - b.amount;
+    return b.date.localeCompare(a.date) || b.id.localeCompare(a.id);
+  });
 
   const movsEl = document.getElementById('movs');
-  if(!list.length){
-    movsEl.innerHTML = '<div class="empty">Sin movimientos en este filtro todavía.</div>';
+  if(!displayList.length){
+    movsEl.innerHTML = `<div class="empty">${searchQ ? 'Sin resultados para tu búsqueda.' : 'Sin movimientos en este filtro todavía.'}</div>`;
     return;
   }
-  movsEl.innerHTML = list.map(m=>{
+  const outsForAvg = list.filter(m=>m.type==='out').map(m=>m.amount);
+  const avgOut = outsForAvg.length >= 3 ? outsForAvg.reduce((a,b)=>a+b,0)/outsForAvg.length : null;
+
+  movsEl.innerHTML = displayList.map(m=>{
     const fecha = new Date(m.date+'T00:00').toLocaleDateString('es-ES',{day:'numeric', month:'short'});
     const iconMap = m.type === 'in' ? incomeItemIcons[currentTab] : itemIcons[currentTab];
     const noteHtml = m.note ? `<div class="mov-note">${escapeHtml(m.note)}</div>` : '';
+    const badges = [];
+    if(m.type === 'out' && avgOut && m.amount > avgOut * 1.6) badges.push('<span class="mov-badge high">⚠ Alto</span>');
+    if(m.type === 'out' && isRecurring(m.desc)) badges.push('<span class="mov-badge recurring">🔁 Recurrente</span>');
+    const badgesHtml = badges.length ? `<div class="mov-badges">${badges.join('')}</div>` : '';
     return `<div class="mov">
       <div class="mov-left">
         ${getIcon(m.desc, iconMap[m.desc])}
@@ -814,10 +1103,12 @@ function render(){
           <div class="mov-desc">${escapeHtml(m.desc)}</div>
           <div class="mov-meta">${fecha}</div>
           ${noteHtml}
+          ${badgesHtml}
         </div>
       </div>
       <div style="display:flex; align-items:center;">
         <div class="mov-amount ${m.type}">${m.type==='in'?'+':'-'}${fmt(m.amount)}</div>
+        <button class="del" onclick="duplicateMov('${m.id}')" title="Duplicar hoy" aria-label="Duplicar movimiento">⎘</button>
         <button class="del" onclick="openMovModal('${m.id}')" title="Editar" aria-label="Editar movimiento">&#9998;</button>
         <button class="del" onclick="deleteMov('${m.id}')" title="Eliminar" aria-label="Eliminar movimiento">×</button>
       </div>
@@ -1184,9 +1475,79 @@ function renderLunaChart(){
   chartCard.style.display = '';
 }
 
+// --- Exportar, copia de seguridad y restaurar ---
+
+function csvEscape(v){
+  const s = String(v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+
+// En el WebView de Android, `<a download>` con un blob: no dispara ninguna
+// descarga (limitación conocida). Si MainActivity expuso el puente
+// window.Android.saveFile, se usa esa vía nativa; si no (navegador normal,
+// pruebas locales), se cae al método estándar del navegador.
+function downloadFile(filename, content, mime){
+  if(window.Android && window.Android.saveFile){
+    try{ window.Android.saveFile(filename, content, mime); return; }catch(e){}
+  }
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=> URL.revokeObjectURL(url), 2000);
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+  const header = ['Fecha','Pestaña','Descripción','Tipo','Monto','Nota'];
+  const rows = TABS.flatMap(t => data[t].map(m => [m.date, t, m.desc, m.type==='in'?'Ingreso':'Gasto', m.amount, m.note||'']));
+  const csv = [header, ...rows].map(r => r.map(csvEscape).join(',')).join('\n');
+  downloadFile(`TOM_movimientos_${todayStr()}.csv`, csv, 'text/csv');
+});
+
+document.getElementById('printPdfBtn').addEventListener('click', ()=>{
+  if(window.Android && window.Android.printPage){
+    try{ window.Android.printPage(); return; }catch(e){}
+  }
+  window.print();
+});
+
+document.getElementById('backupBtn').addEventListener('click', ()=>{
+  const backup = {};
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    backup[k] = localStorage.getItem(k);
+  }
+  downloadFile(`TOM_backup_${todayStr()}.json`, JSON.stringify(backup, null, 2), 'application/json');
+});
+
+document.getElementById('restoreBtn').addEventListener('click', ()=>{
+  document.getElementById('restoreFileInput').click();
+});
+
+document.getElementById('restoreFileInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    let backup;
+    try{ backup = JSON.parse(reader.result); }
+    catch(err){ showAlert('El archivo elegido no es una copia de seguridad válida de TOM.'); return; }
+    showConfirm('¿Restaurar esta copia de seguridad? Se reemplazarán todos los datos actuales de la app.', async ()=>{
+      Object.keys(backup).forEach(k => localStorage.setItem(k, backup[k]));
+      location.reload();
+    });
+  };
+  reader.readAsText(file);
+});
+
 const appModeSelect = document.getElementById('appModeSelect');
 const tomSection = document.getElementById('tomSection');
 const lunaSection = document.getElementById('lunaSection');
+const statsSection = document.getElementById('statsSection');
 const aparienciaSection = document.getElementById('aparienciaSection');
 
 // El botón atrás de Android debe regresar primero al menú TOM (si elegiste
@@ -1198,7 +1559,9 @@ function goToMode(mode){
   if(appModeSelect.value !== mode) appModeSelect.value = mode;
   tomSection.style.display = mode === 'tom' ? '' : 'none';
   lunaSection.style.display = mode === 'luna' ? '' : 'none';
+  statsSection.style.display = mode === 'stats' ? '' : 'none';
   aparienciaSection.style.display = mode === 'apariencia' ? '' : 'none';
+  if(mode === 'stats' && typeof renderStats === 'function') renderStats();
 }
 
 appModeSelect.addEventListener('change', ()=>{

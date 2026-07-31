@@ -20,6 +20,7 @@
 <select id="appModeSelect" aria-label="Sección de la app">
   <option value="tom">TOM</option>
   <option value="luna">Luna</option>
+  <option value="stats">📊 Estadísticas</option>
   <option value="apariencia">🎨 Apariencia</option>
 </select>
 
@@ -49,6 +50,8 @@
 </div>
 
 <div class="wrap">
+
+  <div class="insights-banner" id="insightsBanner" style="display:none;"></div>
 
   <div class="balance-card">
     <div class="balance-label">Dinero</div>
@@ -84,10 +87,48 @@
     </div>
   </div>
 
+  <div class="goal-card" id="savingsGoalCard" style="display:none;">
+    <div class="goal-row">
+      <span class="goal-title">🎯 Meta de ahorro</span>
+      <span class="goal-edit-hint">Toca para cambiar la meta</span>
+    </div>
+    <div class="goal-amounts">
+      <span id="savingsGoalCurrent">$0</span>
+      <span class="goal-sep">de</span>
+      <span class="goal-target" id="savingsGoalTarget">$0</span>
+    </div>
+    <div class="goal-bar-track"><div class="goal-bar-fill" id="savingsGoalBar"></div></div>
+    <div class="goal-pct" id="savingsGoalPct">0%</div>
+  </div>
+
+  <div class="goal-card" id="budgetCard" style="display:none;">
+    <div class="goal-row">
+      <span class="goal-title">📌 Presupuesto del mes</span>
+      <span class="goal-edit-hint">Toca para cambiar el presupuesto</span>
+    </div>
+    <div class="goal-amounts">
+      <span id="budgetCurrent">$0</span>
+      <span class="goal-sep">de</span>
+      <span class="goal-target" id="budgetTarget">$0</span>
+    </div>
+    <div class="goal-bar-track"><div class="goal-bar-fill" id="budgetBar"></div></div>
+    <div class="goal-pct" id="budgetPct">0%</div>
+  </div>
+
   <div class="filters">
     <select id="filterMonth"><option value="">Mes</option></select>
     <button type="button" class="day-filter-btn" id="filterDayBtn">Días</button>
     <button type="button" class="day-filter-btn" id="chartToggleBtn">📊 Gráfica</button>
+  </div>
+
+  <div class="filters">
+    <input type="text" id="searchInput" placeholder="🔎 Buscar movimiento..." aria-label="Buscar movimiento">
+    <select id="sortSelect" aria-label="Ordenar movimientos">
+      <option value="date-desc">Más recientes</option>
+      <option value="date-asc">Más antiguos</option>
+      <option value="amount-desc">Monto: mayor a menor</option>
+      <option value="amount-asc">Monto: menor a mayor</option>
+    </select>
   </div>
 
   <div class="chart-card" id="chartCard" style="display:none;">
@@ -245,6 +286,22 @@
 
 </div>
 
+<div id="statsSection" class="wrap" style="display:none;">
+
+  <div class="section-title">Estadísticas</div>
+
+  <div class="tabs" id="statsTabs">
+    <div class="tab active" data-tab="gastos">Gastos</div>
+    <div class="tab" data-tab="entretenimiento">Entretenimiento</div>
+    <div class="tab" data-tab="ahorro">Ahorro</div>
+  </div>
+
+  <div class="stats-view-strip" id="statsViewStrip"></div>
+
+  <div id="statsBody"></div>
+
+</div>
+
 <div id="aparienciaSection" class="wrap" style="display:none;">
 
   <div class="items-block">
@@ -269,9 +326,21 @@
 
   <button type="button" class="btn-secondary" id="themeResetBtn" style="width:100%;">Restablecer colores originales</button>
 
+  <div class="items-block" style="margin-top:26px;">
+    <div class="items-title">Datos</div>
+    <div class="data-tools-grid">
+      <button type="button" class="btn-secondary" id="exportCsvBtn">⬇ Exportar CSV</button>
+      <button type="button" class="btn-secondary" id="printPdfBtn">🖨 Exportar PDF</button>
+      <button type="button" class="btn-secondary" id="backupBtn">💾 Copia de seguridad</button>
+      <button type="button" class="btn-secondary" id="restoreBtn">♻ Restaurar copia</button>
+    </div>
+    <input type="file" id="restoreFileInput" accept="application/json" style="display:none;">
+  </div>
+
 </div>
 
 <script src="app.js"></script>
+<script src="stats.js"></script>
 
 </body>
 </html>
