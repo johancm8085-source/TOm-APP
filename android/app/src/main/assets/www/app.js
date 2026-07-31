@@ -838,6 +838,7 @@ document.getElementById('form').addEventListener('submit', async e=>{
 
   data[currentTab].push({ id: Date.now().toString(), desc, amount, type, date, note });
   await saveTab(currentTab);
+  if(window.onTomReact) window.onTomReact(type === 'in' ? 'happy' : 'down');
   e.target.reset();
   selectBtnInner.textContent = 'Elegir ítem';
   renderMenu();
@@ -848,6 +849,7 @@ document.getElementById('form').addEventListener('submit', async e=>{
 async function deleteMov(id){
   data[currentTab] = data[currentTab].filter(m=>m.id!==id);
   await saveTab(currentTab);
+  if(window.onTomReact) window.onTomReact('down');
   populateFilters();
   render();
 }
@@ -905,6 +907,7 @@ async function duplicateMov(id){
   if(!m) return;
   data[currentTab].push({ ...m, id: Date.now().toString(), date: todayStr() });
   await saveTab(currentTab);
+  if(window.onTomReact) window.onTomReact(m.type === 'in' ? 'happy' : 'down');
   populateFilters();
   render();
 }
@@ -987,6 +990,8 @@ function editAmountInline(displayElId, currentVal, onSave){
   input.addEventListener('blur', commit);
 }
 
+let __goalJustReached = false;
+
 function updateGoalAndBudgetCards(){
   const goalCard = document.getElementById('savingsGoalCard');
   const budgetCard = document.getElementById('budgetCard');
@@ -999,6 +1004,9 @@ function updateGoalAndBudgetCards(){
     const pct = savingsGoal > 0 ? Math.min(100, Math.round(current/savingsGoal*100)) : 0;
     document.getElementById('savingsGoalBar').style.width = pct + '%';
     document.getElementById('savingsGoalPct').textContent = savingsGoal > 0 ? pct + '% de tu meta' : 'Toca el monto para fijar una meta';
+    const goalReachedNow = savingsGoal > 0 && current >= savingsGoal;
+    if(goalReachedNow && !__goalJustReached && window.onTomReact) window.onTomReact('smile');
+    __goalJustReached = goalReachedNow;
   } else {
     goalCard.style.display = 'none';
     budgetCard.style.display = '';
@@ -1442,6 +1450,12 @@ document.getElementById('debtModalSave').addEventListener('click', async ()=>{
   debtData[name].payments[month] = payment;
   debtData[name].note = note;
   await saveDebtData();
+  if(window.onLunaReact){
+    const paidTotal = Object.values(debtData[name].payments).reduce((a,b)=>a+b, 0);
+    const paidOff = totalDebt > 0 && paidTotal >= totalDebt;
+    if(paidOff) window.onLunaReact('smile');
+    else if(payment > 0) window.onLunaReact('happy');
+  }
   closeDebtModal();
   renderDebtList();
 });
