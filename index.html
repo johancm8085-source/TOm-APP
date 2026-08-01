@@ -20,6 +20,7 @@
 <select id="appModeSelect" aria-label="Sección de la app">
   <option value="tom">TOM</option>
   <option value="luna">Luna</option>
+  <option value="inventario">📦 Inventario</option>
   <option value="stats">📊 Estadísticas</option>
   <option value="apariencia">🎨 Apariencia</option>
 </select>
@@ -359,6 +360,168 @@
 
 </div>
 
+<div id="inventarioSection" class="wrap" style="display:none;">
+
+  <div class="section-title">Inventario</div>
+
+  <div class="inv-dashboard" id="invDashboard"></div>
+
+  <div class="inv-tabs">
+    <button type="button" class="inv-tab active" id="invTabProductos">Productos</button>
+    <button type="button" class="inv-tab" id="invTabCompras">Lista de compras <span class="inv-badge" id="invShopBadge">0</span></button>
+  </div>
+
+  <div id="invProductosView">
+
+    <div class="inv-cat-strip" id="invCatStrip"></div>
+
+    <div class="filters">
+      <input type="text" id="invSearch" placeholder="🔎 Buscar producto..." aria-label="Buscar producto">
+      <select id="invSort" aria-label="Ordenar productos">
+        <option value="name">Nombre</option>
+        <option value="qty-asc">Cantidad: menor primero</option>
+        <option value="qty-desc">Cantidad: mayor primero</option>
+        <option value="price-desc">Precio: mayor primero</option>
+        <option value="price-asc">Precio: menor primero</option>
+        <option value="date">Más recientes</option>
+        <option value="fav">Favoritos primero</option>
+      </select>
+    </div>
+
+    <div class="inv-list" id="invList"></div>
+
+    <button type="button" class="inv-add-btn" id="invAddBtn">+ Agregar producto</button>
+    <button type="button" class="voice-mic-btn voice-mic-wide" data-voice-form="producto" aria-label="Agregar producto por voz" title="Agregar producto por voz">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/>
+        <path d="M5 11a7 7 0 0 0 14 0 M12 18v3 M9 21h6"/>
+      </svg>
+      <span>Agregar por voz</span>
+    </button>
+
+    <div class="inv-tools">
+      <button type="button" class="btn-secondary" id="invManageCatsBtn">🏷 Categorías</button>
+      <button type="button" class="btn-secondary" id="invExportBtn">⬇ Exportar CSV</button>
+      <button type="button" class="btn-secondary" id="invImportBtn">⬆ Importar CSV</button>
+      <button type="button" class="btn-secondary" id="invSettingsBtn">⚙ Ajustes</button>
+    </div>
+    <input type="file" id="invImportFile" accept=".csv,text/csv" style="display:none;">
+
+  </div>
+
+  <div id="invComprasView" style="display:none;">
+    <div class="inv-shop-hint" id="invShopHint"></div>
+    <div class="inv-list" id="invShopList"></div>
+    <div class="inv-tools">
+      <button type="button" class="btn-secondary" id="invShopAddBtn">+ Agregar a la lista</button>
+      <button type="button" class="btn-secondary" id="invShopClearBtn">🧹 Quitar comprados</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-backdrop" id="invProductModalBackdrop">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px; min-width:0;">
+        <span id="invProductIconPreview"></span>
+        <span id="invProductModalTitle">Producto</span>
+      </span>
+      <span style="display:flex; align-items:center; gap:2px;">
+        <button type="button" class="menu-icon-btn" id="invProductFavBtn" title="Favorito" aria-label="Marcar favorito">☆</button>
+        <button type="button" class="menu-icon-btn" id="invProductIconBtn" title="Ícono" aria-label="Cambiar ícono">🎨</button>
+        <button type="button" class="menu-icon-btn" id="invProductDuplicateBtn" title="Duplicar" aria-label="Duplicar producto">⎘</button>
+        <button type="button" class="menu-icon-btn" id="invProductDeleteBtn" title="Eliminar" aria-label="Eliminar producto">🗑</button>
+        <button type="button" class="modal-close" id="invProductModalClose" aria-label="Cerrar">×</button>
+      </span>
+    </div>
+    <div class="icon-picker" id="invProductIconPicker" style="display:none; margin-bottom:14px;"></div>
+
+    <div class="debt-modal-field">
+      <label>Nombre</label>
+      <input type="text" id="invProductName" placeholder="Ej: Arroz">
+    </div>
+    <div class="debt-modal-field">
+      <label>Categoría</label>
+      <select id="invProductCat"></select>
+    </div>
+    <div class="inv-field-row">
+      <div class="debt-modal-field">
+        <label>Cantidad</label>
+        <input type="number" step="0.01" min="0" id="invProductQty" placeholder="0">
+      </div>
+      <div class="debt-modal-field">
+        <label>Unidad</label>
+        <select id="invProductUnit"></select>
+      </div>
+    </div>
+    <div class="inv-field-row">
+      <div class="debt-modal-field">
+        <label>Precio</label>
+        <input type="number" step="0.01" min="0" id="invProductPrice" placeholder="0">
+      </div>
+      <div class="debt-modal-field">
+        <label>Mínimo (poco inventario)</label>
+        <input type="number" step="1" min="0" id="invProductMin" placeholder="2">
+      </div>
+    </div>
+    <div class="debt-modal-field">
+      <label>Nota (opcional)</label>
+      <input type="text" id="invProductNote" placeholder="Ej: marca preferida">
+    </div>
+    <div class="inv-meta-line" id="invProductMeta"></div>
+    <div class="debt-modal-actions">
+      <button type="button" class="btn-secondary" id="invProductCancel">Cancelar</button>
+      <button type="button" id="invProductSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="invCatModalBackdrop">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>Categorías</span>
+      <button type="button" class="modal-close" id="invCatModalClose" aria-label="Cerrar">×</button>
+    </div>
+    <div class="inv-cat-manage" id="invCatManageList"></div>
+    <div class="menu-add-row" id="invCatAddRow">+ Agregar categoría</div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="invMoveModalBackdrop">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>Mover a categoría</span>
+      <button type="button" class="modal-close" id="invMoveModalClose" aria-label="Cerrar">×</button>
+    </div>
+    <div class="inv-move-list" id="invMoveList"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="invSettingsModalBackdrop">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>Ajustes de inventario</span>
+      <button type="button" class="modal-close" id="invSettingsModalClose" aria-label="Cerrar">×</button>
+    </div>
+    <div class="debt-modal-field">
+      <label>Aviso de poco inventario (por defecto)</label>
+      <input type="number" step="1" min="0" id="invSettingLowStock" placeholder="2">
+    </div>
+    <div class="inv-meta-line">Se usa en productos que no tengan su propio mínimo.</div>
+    <div class="debt-modal-field" style="margin-top:14px;">
+      <label style="display:flex; align-items:center; gap:10px; text-transform:none; font-size:14px;">
+        <input type="checkbox" id="invSettingAskShopping" style="width:auto;">
+        Preguntar si agregar a la lista de compras
+      </label>
+    </div>
+    <div class="debt-modal-actions">
+      <button type="button" class="btn-secondary" id="invSettingsCancel">Cancelar</button>
+      <button type="button" id="invSettingsSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div id="statsSection" class="wrap" style="display:none;">
 
   <div class="section-title">Estadísticas</div>
@@ -415,6 +578,7 @@
 <script src="dragsort.js"></script>
 <script src="voice.js"></script>
 <script src="app.js"></script>
+<script src="inventory.js"></script>
 <script src="stats.js"></script>
 <script src="mascot.js"></script>
 

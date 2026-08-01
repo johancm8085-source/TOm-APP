@@ -61,8 +61,17 @@ const NUM_WORDS = {
   novecientas:900
 };
 const NUM_MULT = { mil:1000, miles:1000, millon:1000000, millones:1000000 };
-// Palabras que pueden ir "dentro" del número sin aportar valor.
-const NUM_FILLER = { pesos:1, peso:1, lucas:1, luca:1, mil:0 };
+// Palabras que acompañan a un número sin aportar valor: moneda y unidades de
+// medida. Se absorben dentro del número para que no terminen ensuciando la
+// nota ("cinco unidades sabor fresa" -> nota "sabor fresa", no "unidades…").
+const NUM_FILLER = {
+  pesos:1, peso:1, lucas:1, luca:1, mil:0,
+  unidad:1, unidades:1, kilo:1, kilos:1, kg:1, gramo:1, gramos:1,
+  litro:1, litros:1, ml:1, mililitros:1,
+  caja:1, cajas:1, bolsa:1, bolsas:1, paquete:1, paquetes:1,
+  botella:1, botellas:1, docena:1, docenas:1, frasco:1, frascos:1,
+  rollo:1, rollos:1, vaso:1, vasos:1, libra:1, libras:1
+};
 
 const VoiceNumbers = {
   // Intenta leer un número que EMPIECE en tokens[from].
@@ -453,7 +462,9 @@ const VoiceIntents = {
       const r = VoiceMatch.item(itemText, opts);
       if(r.status === 'exact' || r.status === 'single') out[choiceField.key] = r.value;
       else if(r.status === 'ambiguous') out.__ambiguous = { field: choiceField.key, options: r.options, spoken: itemText };
-      else out[choiceField.key] = itemText;
+      // Ítem nuevo: inicial en mayúscula, igual que en _coerce, para que no
+      // quede en minúscula frente al resto de la lista.
+      else out[choiceField.key] = itemText.charAt(0).toUpperCase() + itemText.slice(1);
     }
 
     // 3) Nota: lo que sobra, quitando el arranque "nota"/"con nota".

@@ -70,6 +70,94 @@ function attachDragReorder(containerEl, rowSelector, handleSelector, onReorder){
   });
 }
 
+// --- Deslizar una fila para revelar acciones ---------------------------------
+// Reutilizable por cualquier lista. Cada fila debe tener dentro:
+//   .swipe-actions.left   -> se ve al deslizar hacia la DERECHA
+//   .swipe-actions.right  -> se ve al deslizar hacia la IZQUIERDA
+//   .swipe-content        -> lo que se mueve
+// Solo se mueve con `transform`, y el gesto no se activa hasta saber que es
+// horizontal, para no robarle el scroll vertical a la página.
+function attachSwipeActions(containerEl, rowSelector, opts){
+  const openWidth = (opts && opts.openWidth) || 148;
+  let row = null, content = null, startX = 0, startY = 0;
+  let axis = null, pointerId = null, baseOffset = 0;
+
+  function contentOf(r){ return r.querySelector('.swipe-content'); }
+
+  function closeAll(except){
+    containerEl.querySelectorAll(rowSelector).forEach(r=>{
+      if(r === except) return;
+      const c = contentOf(r);
+      if(c && c.dataset.open === '1'){
+        c.dataset.open = '0';
+        c.style.transform = 'translateX(0px)';
+        r.classList.remove('swiped');
+      }
+    });
+  }
+
+  function onMove(e){
+    if(!row || e.pointerId !== pointerId) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if(axis === null){
+      if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if(axis === 'y'){ finish(); return; }   // es scroll: no interferir
+      row.classList.add('swiping');
+    }
+    if(axis !== 'x') return;
+    e.preventDefault();
+    let next = baseOffset + dx;
+    // Solo se permite abrir hasta el ancho de las acciones, con freno suave.
+    if(next > openWidth) next = openWidth + (next - openWidth) * 0.25;
+    if(next < -openWidth) next = -openWidth + (next + openWidth) * 0.25;
+    content.style.transform = 'translateX(' + next + 'px)';
+  }
+
+  function finish(e){
+    if(!row) return;
+    const c = content, r = row;
+    if(axis === 'x'){
+      const m = /translateX\((-?[\d.]+)px\)/.exec(c.style.transform || '');
+      const cur = m ? parseFloat(m[1]) : 0;
+      let target = 0;
+      if(cur <= -openWidth * 0.45) target = -openWidth;
+      else if(cur >= openWidth * 0.45) target = openWidth;
+      c.style.transform = 'translateX(' + target + 'px)';
+      c.dataset.open = target === 0 ? '0' : '1';
+      r.classList.toggle('swiped', target !== 0);
+      if(target !== 0) closeAll(r);
+    }
+    r.classList.remove('swiping');
+    try{ r.releasePointerCapture(pointerId); }catch(err){}
+    row = null; content = null; axis = null; pointerId = null;
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', finish);
+    document.removeEventListener('pointercancel', finish);
+  }
+
+  containerEl.addEventListener('pointerdown', (e)=>{
+    // Los controles con su propia acción (botones +/-, acciones reveladas)
+    // no deben iniciar un deslizamiento.
+    if(e.target.closest('button, input, select, a')) return;
+    const r = e.target.closest(rowSelector);
+    if(!r || !containerEl.contains(r)) return;
+    const c = contentOf(r);
+    if(!c) return;
+    row = r; content = c; pointerId = e.pointerId;
+    startX = e.clientX; startY = e.clientY; axis = null;
+    const m = /translateX\((-?[\d.]+)px\)/.exec(c.style.transform || '');
+    baseOffset = m ? parseFloat(m[1]) : 0;
+    try{ r.setPointerCapture(pointerId); }catch(err){}
+    document.addEventListener('pointermove', onMove, { passive:false });
+    document.addEventListener('pointerup', finish);
+    document.addEventListener('pointercancel', finish);
+  });
+
+  return { closeAll: ()=> closeAll(null) };
+}
+
 // --- Animaciones de confirmación muy suaves para editar/agregar/eliminar,
 // reutilizadas por cualquier lista editable. Solo transform/opacity. ---
 function playRowConfirm(rowEl){

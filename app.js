@@ -1604,6 +1604,7 @@ const appModeSelect = document.getElementById('appModeSelect');
 const tomSection = document.getElementById('tomSection');
 const lunaSection = document.getElementById('lunaSection');
 const statsSection = document.getElementById('statsSection');
+const inventarioSection = document.getElementById('inventarioSection');
 const aparienciaSection = document.getElementById('aparienciaSection');
 
 // El botón atrás de Android debe regresar primero al menú TOM (si elegiste
@@ -1616,8 +1617,10 @@ function goToMode(mode){
   tomSection.style.display = mode === 'tom' ? '' : 'none';
   lunaSection.style.display = mode === 'luna' ? '' : 'none';
   statsSection.style.display = mode === 'stats' ? '' : 'none';
+  inventarioSection.style.display = mode === 'inventario' ? '' : 'none';
   aparienciaSection.style.display = mode === 'apariencia' ? '' : 'none';
   if(mode === 'stats' && typeof renderStats === 'function') renderStats();
+  if(mode === 'inventario' && typeof invRenderAll === 'function') invRenderAll();
 }
 
 appModeSelect.addEventListener('change', ()=>{
