@@ -82,7 +82,7 @@ let monthlyBudget = { gastos: 0, entretenimiento: 0, ahorro: 0 };
 let savingsGoal = 0;
 
 let appMode = 'tom';
-const DEBT_DEFAULT_ITEMS = ['Mama','Tarjeta','Prestamos','Parqueadero','Servicio','Arriendo'];
+const DEBT_DEFAULT_ITEMS = ['Tarjeta','Prestamos','Parqueadero','Servicio','Arriendo'];
 let debtItems = [...DEBT_DEFAULT_ITEMS];
 let debtData = {}; // { [name]: { totalDebt: number, payments: { 'YYYY-MM': number } } }
 let debtIcons = {}; // name -> "iconKey|color"
