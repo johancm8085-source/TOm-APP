@@ -1718,6 +1718,114 @@ const THEME_LABELS = {
   accent:'Acento', text:'Texto', 'text-dim':'Texto gris', green:'Verde', red:'Rojo'
 };
 
+// --- Registro de formularios para el motor de voz ---
+// El motor (voice.js) no sabe nada de gastos ni de deudas: aquí solo se
+// declara QUÉ campos tiene cada formulario y QUÉ hacer al aceptar. Añadir
+// un formulario futuro (inventario, préstamos...) es registrar otro esquema,
+// sin tocar el motor.
+
+VoiceForms.register('movimiento', {
+  title: 'Registrar movimiento por voz',
+  hint: 'Di el ítem, el monto y la nota. Ejemplo: "Gasolina cuarenta mil tanqueo completo".',
+  fields: [
+    {
+      key:'item', label:'Ítem', type:'choice', required:true, article:'el',
+      aliases:['item','ítem','categoria','categoría','concepto','producto','descripcion','descripción','nombre'],
+      // Se lee en vivo: si el usuario agrega ítems nuevos, la voz los reconoce
+      // de inmediato sin tocar nada más.
+      choices: ()=> activeItemsArray().slice()
+    },
+    {
+      key:'amount', label:'Monto', type:'number', required:true, article:'el',
+      aliases:['monto','valor','precio','cantidad','costo','total','plata'],
+      format: (v)=> fmt(v)
+    },
+    {
+      key:'note', label:'Nota', type:'text', required:false, article:'la',
+      aliases:['nota','observacion','observación','comentario','detalle']
+    }
+  ],
+  async onAccept(values){
+    const type = document.getElementById('f-type').value;
+    const date = selectedDay || todayStr();
+    data[currentTab].push({
+      id: Date.now().toString(),
+      desc: values.item,
+      amount: values.amount,
+      type,
+      date,
+      note: values.note || ''
+    });
+    await saveTab(currentTab);
+    // Si el ítem dictado no existía en la lista, se agrega para la próxima vez.
+    const arr = activeItemsArray();
+    if(!arr.some(n => VoiceText.normalize(n) === VoiceText.normalize(values.item))){
+      arr.push(values.item);
+      await saveActiveItems();
+    }
+    if(window.onTomReact) window.onTomReact(type === 'in' ? 'happy' : 'down');
+    renderMenu();
+    populateFilters();
+    render();
+  }
+});
+
+VoiceForms.register('pendiente', {
+  title: 'Registrar pendiente por voz',
+  hint: 'Di el pendiente, la deuda total y la nota. Ejemplo: "Tarjeta un millón cuota de diciembre".',
+  fields: [
+    {
+      key:'item', label:'Pendiente', type:'choice', required:true, article:'el',
+      aliases:['pendiente','deuda','item','ítem','nombre','concepto','categoria','categoría'],
+      choices: ()=> debtItems.slice()
+    },
+    {
+      key:'amount', label:'Deuda total', type:'number', required:true, article:'la',
+      aliases:['monto','deuda','deuda total','valor','total','cantidad','precio'],
+      format: (v)=> fmt(v)
+    },
+    {
+      key:'note', label:'Nota', type:'text', required:false, article:'la',
+      aliases:['nota','observacion','observación','comentario','detalle']
+    }
+  ],
+  async onAccept(values){
+    const name = values.item;
+    if(!debtItems.includes(name)){
+      debtItems.push(name);
+      await saveDebtItems();
+    }
+    if(!debtData[name]) debtData[name] = { totalDebt: 0, payments: {} };
+    debtData[name].totalDebt = values.amount;
+    if(values.note) debtData[name].note = values.note;
+    await saveDebtData();
+    renderDebtList();
+    playRowAddIn([...document.getElementById('debtList').querySelectorAll('.debt-row')].find(r=>r.dataset.name===name));
+  }
+});
+
+// Comandos globales de navegación. Demuestran (y dejan listo) el registro
+// extensible: agregar "muéstrame los gastos de este mes" o "busca arroz" en
+// el futuro es registrar otro comando aquí, sin tocar voice.js.
+VoiceRouter.register({
+  id: 'nav',
+  match: /^(abre|abrir|ve a|vete a|muestra|muestrame|mostrar)\s+(las\s+|los\s+|la\s+|el\s+)?(estadisticas|graficas|apariencia|colores|luna|pendientes|tom|gastos)$/,
+  handler(groups, session){
+    const dest = groups[3];
+    const map = {
+      estadisticas:'stats', graficas:'stats',
+      apariencia:'apariencia', colores:'apariencia',
+      luna:'luna', pendientes:'luna',
+      tom:'tom', gastos:'tom'
+    };
+    const mode = map[dest];
+    if(!mode) return;
+    session.close();
+    appModeSelect.value = mode;
+    appModeSelect.dispatchEvent(new Event('change'));
+  }
+});
+
 renderPresetGrid();
 renderThemeColorGrid();
 renderThemePreviewIcons();
@@ -1729,3 +1837,4 @@ loadDebts().then(()=>{
   lunaFilterMonth.value = currentMonthKey();
   renderDebtList();
 });
+initVoice();

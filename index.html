@@ -37,6 +37,36 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="voiceModalBackdrop">
+  <div class="modal-box voice-box">
+    <div class="modal-header">
+      <span id="voiceModalTitle">Registrar por voz</span>
+      <button type="button" class="modal-close" id="voiceModalClose" aria-label="Cerrar">×</button>
+    </div>
+    <div class="voice-mic-area">
+      <button type="button" class="voice-mic-ring" id="voiceMicRing" aria-label="Activar o pausar el micrófono">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/>
+          <path d="M5 11a7 7 0 0 0 14 0 M12 18v3 M9 21h6"/>
+        </svg>
+      </button>
+      <div class="voice-status" id="voiceStatus">Escuchando…</div>
+    </div>
+    <div class="voice-transcript" id="voiceTranscript"></div>
+    <div class="voice-assistant" id="voiceAssistant"></div>
+    <div class="voice-choices" id="voiceChoices" style="display:none;"></div>
+    <div class="voice-summary" id="voiceSummary"></div>
+    <div class="debt-modal-actions">
+      <button type="button" class="btn-secondary" id="voiceCancelBtn">✗ Cancelar</button>
+      <button type="button" class="btn-secondary" id="voiceEditBtn">✎ Editar</button>
+      <button type="button" id="voiceAcceptBtn">✓ Aceptar</button>
+    </div>
+    <label class="voice-tts-toggle">
+      <input type="checkbox" id="voiceTtsToggle"> Respuesta hablada
+    </label>
+  </div>
+</div>
+
 <div id="tomSection">
 
 <div class="app-logo-strip">
@@ -183,6 +213,12 @@
       <option value="in">Ingreso</option>
     </select>
     <input id="f-note" type="text" placeholder="Nota (opcional)">
+    <button type="button" class="voice-mic-btn" data-voice-form="movimiento" aria-label="Registrar por voz" title="Registrar por voz">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/>
+        <path d="M5 11a7 7 0 0 0 14 0 M12 18v3 M9 21h6"/>
+      </svg>
+    </button>
     <button type="submit">Agregar</button>
   </form>
 
@@ -269,6 +305,13 @@
   <div class="items-block">
     <div class="debt-list" id="debtList"></div>
     <div class="debt-add-row" id="debtAddRow">+ Agregar pendiente</div>
+    <button type="button" class="voice-mic-btn voice-mic-wide" data-voice-form="pendiente" aria-label="Registrar pendiente por voz" title="Registrar pendiente por voz">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/>
+        <path d="M5 11a7 7 0 0 0 14 0 M12 18v3 M9 21h6"/>
+      </svg>
+      <span>Registrar por voz</span>
+    </button>
   </div>
 
   <div class="modal-backdrop" id="debtModalBackdrop">
@@ -370,6 +413,7 @@
 </div>
 
 <script src="dragsort.js"></script>
+<script src="voice.js"></script>
 <script src="app.js"></script>
 <script src="stats.js"></script>
 <script src="mascot.js"></script>
