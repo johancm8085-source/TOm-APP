@@ -1,8 +1,19 @@
-// --- Mascotas TOM y Luna: microanimaciones idle + reacciones a eventos ---
+// --- Mascotas TOM y Luna: microanimaciones idle + saludo + reacciones ---
 // Todo el movimiento continuo (parpadeo, inclinar cabeza, orejas) se dispara
 // desde aquí con setTimeout de duración aleatoria, para que nunca se sienta
 // como un loop mecánico. Las reacciones a eventos (gasto, ingreso, meta) se
 // exponen como window.onTomReact/window.onLunaReact y se llaman desde app.js.
+//
+// Limpieza de cada animación de un solo disparo (clases "mt-*"), con doble
+// seguro para que NUNCA quede una animación pegada bloqueando el siguiente
+// toque, pase lo que pase:
+//   1) `animationend` (vía principal): limpia justo cuando la animación en
+//      curso termina de verdad, sin importar cuántas veces se haya reiniciado.
+//   2) setTimeout de respaldo con "generación": si por lo que sea el navegador
+//      no llega a disparar animationend (pestaña en segundo plano, ahorro de
+//      batería, app minimizada en Android), limpia igual pasado su tiempo —
+//      pero solo si nadie volvió a tocar el personaje mientras tanto, para
+//      no cortar a mitad de camino una animación más nueva.
 
 function mascotRand(min, max){ return min + Math.random() * (max - min); }
 
@@ -13,17 +24,29 @@ function initMascot(rootId){
   const breatheEl = root.querySelector('.mascot-breathe');
   const blinkEl = root.querySelector('.mascot-blink');
   const glowEl = root.querySelector('.mascot-glow');
+  const pawEl = root.querySelector('.mascot-paw');
+
+  const gen = new WeakMap();
+
+  [tiltEl, breatheEl, blinkEl, glowEl, pawEl].forEach(el=>{
+    el.addEventListener('animationend', ()=>{
+      [...el.classList].forEach(c=>{ if(c.indexOf('mt-') === 0) el.classList.remove(c); });
+    });
+  });
 
   function pulse(el, cls, ms){
     el.classList.remove(cls);
     void el.offsetWidth; // fuerza reflow para poder re-disparar la misma clase seguida
     el.classList.add(cls);
-    setTimeout(()=> el.classList.remove(cls), ms);
+    const myGen = (gen.get(el) || 0) + 1;
+    gen.set(el, myGen);
+    if(ms){
+      setTimeout(()=>{
+        if(gen.get(el) === myGen) el.classList.remove(cls);
+      }, ms + 80);
+    }
   }
 
-  // Respiración: sigue con el @keyframes infinito del CSS; aquí solo se
-  // gestionan los micro-eventos ocasionales (parpadeo, cabeza, orejas), cada
-  // uno reprogramado con un intervalo aleatorio distinto para que no coincidan.
   let alive = true;
 
   function loopBlink(){
@@ -59,10 +82,21 @@ function initMascot(rootId){
   loopHeadTilt();
   loopEarTwitch();
 
+  // Saludo al tocar (~1.3s): levanta la pata y saluda 2-3 veces, sonríe,
+  // parpadea una vez cerca del final y todo vuelve suavemente a reposo.
+  // Se puede volver a disparar en cualquier momento, incluso a mitad de la
+  // animación anterior (pulse() siempre reinicia limpio con remove+reflow+add).
+  let blinkTimer = null, blinkGen = 0;
   function onTap(){
-    pulse(breatheEl, 'mt-tap', 380);
-    pulse(tiltEl, 'mt-wiggle', 400);
-    pulse(blinkEl, 'mt-blink', 160);
+    pulse(breatheEl, 'mt-wave-body', 1300);
+    pulse(tiltEl, 'mt-wave-head', 1300);
+    pulse(pawEl, 'mt-wave', 1300);
+    pulse(glowEl, 'mt-wave-smile', 1300);
+    if(blinkTimer) clearTimeout(blinkTimer);
+    const myBlinkGen = ++blinkGen;
+    blinkTimer = setTimeout(()=>{
+      if(myBlinkGen === blinkGen) pulse(blinkEl, 'mt-blink', 160);
+    }, 950);
   }
   root.addEventListener('click', onTap);
   root.addEventListener('keydown', (e)=>{
