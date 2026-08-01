@@ -332,6 +332,20 @@
   .menu-row:hover{ background: var(--panel); }
   .menu-row-main{ display:flex; align-items:center; gap:10px; flex:1; min-width:0; cursor:pointer; padding:4px 4px; }
   .menu-row-label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* --- Asa de arrastre para reordenar (Lista de TOM y pendientes de Luna) ---
+     touch-action:none evita que el navegador intente hacer scroll de la
+     página mientras se arrastra con el dedo en móvil/Android. */
+  .drag-handle{
+    flex:0 0 auto; width:26px; height:32px; display:flex; align-items:center; justify-content:center;
+    color:var(--text-dim); font-size:16px; cursor:grab; touch-action:none; user-select:none;
+    -webkit-user-select:none;
+  }
+  .drag-handle:hover{ color:var(--gold); }
+  .menu-row.dragging, .debt-row.dragging{
+    position:relative; z-index:5; box-shadow: var(--shadow-md); cursor:grabbing;
+    background: var(--panel-2);
+  }
   .menu-icon-btn{
     background:none; border:none; color:var(--text-dim); font-size:16px; cursor:pointer;
     padding:6px 8px; flex:0 0 auto; line-height:1;
@@ -399,6 +413,25 @@
   .del{ background:none; border:none; color:var(--text-dim); font-size:16px; cursor:pointer; padding:0 0 0 10px; }
   .del:hover{ color: var(--red); }
   .empty{ text-align:center; color:var(--text-dim); padding:30px 0; font-family: system-ui, sans-serif; font-size:14px;}
+
+  /* --- Animación de confirmación muy suave al editar/agregar/eliminar un
+     elemento de cualquier lista editable. Solo transform/opacity. --- */
+  .menu-row.row-confirm, .debt-row.row-confirm{ animation: row-confirm-pulse 0.45s ease-out 1; }
+  @keyframes row-confirm-pulse{
+    0%{ transform:scale(1); }
+    35%{ transform:scale(1.015); }
+    100%{ transform:scale(1); }
+  }
+  .menu-row.row-add-in, .debt-row.row-add-in{ animation: row-add-in 0.32s ease-out 1; }
+  @keyframes row-add-in{
+    0%{ transform:scale(0.94) translateY(-6px); opacity:0; }
+    100%{ transform:scale(1) translateY(0); opacity:1; }
+  }
+  .menu-row.row-delete-out, .debt-row.row-delete-out{ animation: row-delete-out 0.24s ease-in 1; }
+  @keyframes row-delete-out{
+    0%{ transform:scale(1); opacity:1; }
+    100%{ transform:scale(0.93) translateY(-4px); opacity:0; }
+  }
 
   .debt-list{ display:flex; flex-direction:column; gap:10px; margin-bottom:10px; font-family: system-ui, sans-serif; }
   .debt-row{

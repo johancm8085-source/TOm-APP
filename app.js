@@ -657,6 +657,18 @@ const selectBtnInner = document.getElementById('selectBtnInner');
 const selectMenu = document.getElementById('selectMenu');
 const selectWrap = document.getElementById('selectWrap');
 
+// Reordenar arrastrando el asa de cualquier fila de la Lista activa
+// (gastos/entretenimiento/ahorro x gastos/ingresos, según la pestaña y el
+// tipo elegidos en ese momento). Se engancha una sola vez: el callback
+// vuelve a leer el estado actual al soltar, no queda atado al array de hoy.
+attachDragReorder(selectMenu, '.menu-row', '.drag-handle', async ()=>{
+  const newOrder = [...selectMenu.querySelectorAll('.menu-row')].map(r=>r.dataset.name);
+  const arr = activeItemsArray();
+  arr.length = 0;
+  arr.push(...newOrder);
+  await saveActiveItems();
+});
+
 selectBtn.addEventListener('click', ()=>{
   const isOpen = selectMenu.classList.toggle('open');
   selectBtn.classList.toggle('open', isOpen);
@@ -701,6 +713,7 @@ function renderMenu(){
   const rows = list.map(name=>{
     const safe = escapeHtml(name);
     return `<div class="menu-row" data-name="${safe}">
+      <span class="drag-handle" aria-label="Reordenar ${safe}">⠿</span>
       <div class="menu-row-main" data-name="${safe}">${getIcon(name, icons[name])}<span class="menu-row-label">${safe}</span></div>
       <button type="button" class="menu-icon-btn menu-more-btn" data-name="${safe}" title="Opciones" aria-label="Opciones de ${safe}">⋮</button>
     </div>`;
@@ -734,6 +747,7 @@ function renderMenu(){
           await saveActiveIcons();
           renderMenu();
           render();
+          playRowConfirm([...selectMenu.querySelectorAll('.menu-row')].find(r=>r.dataset.name===name));
         });
       });
 
@@ -764,6 +778,7 @@ function renderMenu(){
           }
           renderMenu();
           render();
+          playRowConfirm([...selectMenu.querySelectorAll('.menu-row')].find(r=>r.dataset.name===val));
         }
       }
       renameInput.addEventListener('keydown', ev=>{
@@ -774,14 +789,16 @@ function renderMenu(){
       panel.querySelector('.row-delete-btn').addEventListener('click', (ev)=>{
         ev.stopPropagation();
         showConfirm(`¿Eliminar "${name}" de la lista?`, async ()=>{
-          const arr = activeItemsArray();
-          const kept = arr.filter(n=>n!==name);
-          arr.length = 0;
-          arr.push(...kept);
-          delete activeIconsMap()[name];
-          await saveActiveItems();
-          await saveActiveIcons();
-          renderMenu();
+          playRowDeleteOut(row, async ()=>{
+            const arr = activeItemsArray();
+            const kept = arr.filter(n=>n!==name);
+            arr.length = 0;
+            arr.push(...kept);
+            delete activeIconsMap()[name];
+            await saveActiveItems();
+            await saveActiveIcons();
+            renderMenu();
+          });
         });
       });
     });
@@ -810,6 +827,9 @@ function renderMenu(){
         if(chosen) activeIconsMap()[val] = chosen.dataset.icon;
         await saveActiveItems();
         await saveActiveIcons();
+        renderMenu();
+        playRowAddIn([...selectMenu.querySelectorAll('.menu-row')].find(r=>r.dataset.name===val));
+        return;
       }
       renderMenu();
     }
@@ -1256,6 +1276,7 @@ function renderDebtList(){
     const safe = escapeHtml(name);
     const noteHtml = d.note ? `<div class="mov-note">${escapeHtml(d.note)}</div>` : '';
     return `<div class="debt-row" style="border-left-color:${color};" data-name="${safe}">
+      <span class="drag-handle" aria-label="Reordenar ${safe}">⠿</span>
       <div class="debt-row-main" data-name="${safe}" style="flex:1;">
         ${getIcon(name, debtIcons[name])}
         <div class="debt-info">
@@ -1276,6 +1297,14 @@ function resetDebtAddRow(){
   document.getElementById('debtAddRow').innerHTML = '+ Agregar pendiente';
 }
 
+// Reordenar arrastrando el asa de cualquier pendiente (mismo componente que
+// usa la Lista de TOM). Se engancha una sola vez.
+attachDragReorder(document.getElementById('debtList'), '.debt-row', '.drag-handle', async ()=>{
+  const newOrder = [...document.getElementById('debtList').querySelectorAll('.debt-row')].map(r=>r.dataset.name);
+  debtItems = newOrder;
+  await saveDebtItems();
+});
+
 document.getElementById('debtAddRow').addEventListener('click', (e)=>{
   const row = document.getElementById('debtAddRow');
   row.innerHTML = `<div style="flex:1; min-width:0;">
@@ -1292,6 +1321,7 @@ document.getElementById('debtAddRow').addEventListener('click', (e)=>{
 
   async function commit(){
     const val = input.value.trim();
+    let added = false;
     if(val && !debtItems.includes(val)){
       debtItems.push(val);
       debtData[val] = { totalDebt: 0, payments: {} };
@@ -1300,9 +1330,11 @@ document.getElementById('debtAddRow').addEventListener('click', (e)=>{
       await saveDebtItems();
       await saveDebtData();
       await saveDebtIcons();
+      added = true;
     }
     resetDebtAddRow();
     renderDebtList();
+    if(added) playRowAddIn([...document.getElementById('debtList').querySelectorAll('.debt-row')].find(r=>r.dataset.name===val));
   }
   function cancel(){ resetDebtAddRow(); }
 
@@ -1354,6 +1386,12 @@ document.getElementById('debtModalIconBtn').addEventListener('click', (e)=>{
       await saveDebtIcons();
       document.getElementById('debtModalIconPreview').innerHTML = getIcon(editingDebtName, debtIcons[editingDebtName]);
       picker.style.display = 'none';
+      // La lista de pendientes debajo del modal también debe reflejar el
+      // cambio de inmediato (antes se quedaba con el ícono viejo hasta la
+      // próxima vez que algo más disparara un renderDebtList()).
+      const nameNow = editingDebtName;
+      renderDebtList();
+      playRowConfirm([...document.getElementById('debtList').querySelectorAll('.debt-row')].find(r=>r.dataset.name===nameNow));
     });
   });
 });
@@ -1385,6 +1423,7 @@ document.getElementById('debtModalRenameBtn').addEventListener('click', (e)=>{
     }
     input.outerHTML = `<span id="debtModalTitle">${escapeHtml(editingDebtName)}</span>`;
     renderDebtList();
+    playRowConfirm([...document.getElementById('debtList').querySelectorAll('.debt-row')].find(r=>r.dataset.name===editingDebtName));
   }
   input.addEventListener('keydown', ev=>{
     if(ev.key === 'Enter'){ ev.preventDefault(); commit(); }
@@ -1401,14 +1440,17 @@ document.getElementById('debtModalDeleteBtn').addEventListener('click', (e)=>{
   const name = editingDebtName;
   if(!name) return;
   showConfirm(`¿Eliminar "${name}" de los pendientes?`, async ()=>{
-    debtItems = debtItems.filter(n=>n!==name);
-    delete debtData[name];
-    delete debtIcons[name];
-    await saveDebtItems();
-    await saveDebtData();
-    await saveDebtIcons();
     closeDebtModal();
-    renderDebtList();
+    const row = [...document.getElementById('debtList').querySelectorAll('.debt-row')].find(r=>r.dataset.name===name);
+    playRowDeleteOut(row, async ()=>{
+      debtItems = debtItems.filter(n=>n!==name);
+      delete debtData[name];
+      delete debtIcons[name];
+      await saveDebtItems();
+      await saveDebtData();
+      await saveDebtIcons();
+      renderDebtList();
+    });
   });
 });
 
