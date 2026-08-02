@@ -68,6 +68,21 @@
   </div>
 </div>
 
+<div class="today-card" id="todayCard" style="display:none;">
+  <div class="today-head">
+    <img src="luna-logo-small.png" alt="" class="today-luna">
+    <div>
+      <div class="today-title">Luna te recuerda</div>
+      <div class="today-sub" id="todayCount">Hoy tienes 0 pendientes</div>
+    </div>
+  </div>
+  <div class="today-list" id="todayList"></div>
+  <div class="today-actions">
+    <button type="button" id="todayGoBtn">Ver pendientes</button>
+    <button type="button" class="btn-secondary" id="todayLaterBtn">Recordármelo más tarde</button>
+  </div>
+</div>
+
 <div id="tomSection">
 
 <div class="app-logo-strip">
@@ -288,10 +303,17 @@
 
   <div class="section-title">Pendientes por pagar</div>
 
+  <div class="rem-dashboard" id="remDashboard"></div>
+
+  <div class="rem-next" id="remNext" style="display:none;"></div>
+
   <div class="filters">
     <select id="lunaFilterMonth"><option value="">Mes</option></select>
+    <button type="button" class="day-filter-btn" id="lunaCalendarBtn">📅 Calendario</button>
     <button type="button" class="day-filter-btn" id="lunaChartToggleBtn">📊 Gráfica</button>
   </div>
+
+  <div class="rem-warn" id="remPermWarn" style="display:none;"></div>
 
   <div class="debt-total-summary" id="lunaTotalSummary">Debes en total: $0</div>
 
@@ -347,6 +369,62 @@
         <label>Nota (opcional)</label>
         <input type="text" id="debtModalNote" placeholder="Ej: Préstamo de la moto">
       </div>
+
+      <div class="rem-block">
+        <label class="rem-toggle">
+          <input type="checkbox" id="remEnabled">
+          <span>🔔 Recordarme este pendiente</span>
+        </label>
+        <div id="remFields" style="display:none;">
+          <div class="inv-field-row">
+            <div class="debt-modal-field">
+              <label>Fecha</label>
+              <input type="date" id="remDate">
+            </div>
+            <div class="debt-modal-field">
+              <label>Hora</label>
+              <input type="time" id="remTime" value="08:00">
+            </div>
+          </div>
+          <div class="inv-field-row">
+            <div class="debt-modal-field">
+              <label>Repetición</label>
+              <select id="remRepeat">
+                <option value="once">Una sola vez</option>
+                <option value="daily">Diario</option>
+                <option value="weekly">Semanal</option>
+                <option value="biweekly">Quincenal</option>
+                <option value="monthly">Mensual</option>
+                <option value="yearly">Anual</option>
+                <option value="custom">Personalizado…</option>
+              </select>
+            </div>
+            <div class="debt-modal-field">
+              <label>Prioridad</label>
+              <select id="remPriority">
+                <option value="baja">Baja</option>
+                <option value="media" selected>Media</option>
+                <option value="alta">Alta</option>
+              </select>
+            </div>
+          </div>
+          <div class="debt-modal-field" id="remCustomWrap" style="display:none;">
+            <label>Repetir cada (días)</label>
+            <input type="number" min="1" step="1" id="remCustomDays" placeholder="Ej: 45">
+          </div>
+          <div class="debt-modal-field">
+            <label>Categoría</label>
+            <input type="text" id="remCategory" list="remCategoryList" placeholder="Ej: Servicios">
+            <datalist id="remCategoryList"></datalist>
+          </div>
+          <div class="rem-state-row">
+            <span class="rem-state-label" id="remStateLabel">Pendiente</span>
+            <button type="button" class="btn-secondary rem-mini" id="remToggleDone">✓ Marcar realizado</button>
+            <button type="button" class="btn-secondary rem-mini" id="remSnoozeBtn">⏰ Posponer</button>
+          </div>
+        </div>
+      </div>
+
       <div class="debt-modal-summary">
         <span>Abonado en total: <b id="debtModalPaidTotal">$0</b></span>
         <span>Progreso: <b id="debtModalPct">0%</b></span>
@@ -358,6 +436,47 @@
     </div>
   </div>
 
+</div>
+
+<div class="modal-backdrop" id="remCalendarBackdrop">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;">
+        <button type="button" class="menu-icon-btn" id="remCalPrev" aria-label="Mes anterior">‹</button>
+        <span id="remCalTitle">Calendario</span>
+        <button type="button" class="menu-icon-btn" id="remCalNext" aria-label="Mes siguiente">›</button>
+      </span>
+      <button type="button" class="modal-close" id="remCalClose" aria-label="Cerrar">×</button>
+    </div>
+    <div class="modal-days-grid" id="remCalGrid"></div>
+    <div class="rem-day-detail" id="remCalDetail"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="remSnoozeBackdrop">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>Posponer recordatorio</span>
+      <button type="button" class="modal-close" id="remSnoozeClose" aria-label="Cerrar">×</button>
+    </div>
+    <div class="rem-snooze-list">
+      <button type="button" class="inv-move-opt" data-snooze="10">⏰ 10 minutos</button>
+      <button type="button" class="inv-move-opt" data-snooze="30">⏰ 30 minutos</button>
+      <button type="button" class="inv-move-opt" data-snooze="60">⏰ 1 hora</button>
+      <button type="button" class="inv-move-opt" data-snooze="tomorrow">🌅 Mañana</button>
+    </div>
+    <div class="debt-modal-field" style="margin-top:14px;">
+      <label>Elegir fecha y hora</label>
+      <div class="inv-field-row">
+        <input type="date" id="remSnoozeDate">
+        <input type="time" id="remSnoozeTime" value="08:00">
+      </div>
+    </div>
+    <div class="debt-modal-actions">
+      <button type="button" class="btn-secondary" id="remSnoozeCancel">Cancelar</button>
+      <button type="button" id="remSnoozeCustom">Posponer</button>
+    </div>
+  </div>
 </div>
 
 <div id="inventarioSection" class="wrap" style="display:none;">
@@ -578,6 +697,7 @@
 <script src="dragsort.js"></script>
 <script src="voice.js"></script>
 <script src="app.js"></script>
+<script src="reminders.js"></script>
 <script src="inventory.js"></script>
 <script src="stats.js"></script>
 <script src="mascot.js"></script>

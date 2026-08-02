@@ -43,6 +43,8 @@ class MainActivity : AppCompatActivity() {
     private var speechRecognizer: SpeechRecognizer? = null
     private var tts: TextToSpeech? = null
     private var ttsReady = false
+    private var pendingOpenReminder: String? = null
+    private var pageReady = false
 
     // El permiso de micrófono se pide la primera vez que la web intenta
     // escuchar, no al abrir la app.
@@ -51,6 +53,18 @@ class MainActivity : AppCompatActivity() {
     ) { granted ->
         if (granted) beginListening()
         else jsVoice("onError", "Necesito permiso para usar el micrófono.")
+    }
+
+    // Permiso de notificaciones (Android 13+). Se pide desde Luna, no al abrir.
+    private val notifPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) ReminderScheduler.ensureChannel(this)
+        webView.post {
+            webView.evaluateJavascript(
+                "window.__remindersNative && window.__remindersNative.onPermission($granted)", null
+            )
+        }
     }
 
     // Debe registrarse como propiedad de la clase (antes de onCreate) para
@@ -141,6 +155,77 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun voiceAvailable(): Boolean = SpeechRecognizer.isRecognitionAvailable(this@MainActivity)
+
+        // --- Recordatorios de Luna ---
+        // Luna envía aquí la lista completa cada vez que cambia algo. Se
+        // guarda de forma nativa y se reprograman todas las alarmas, para que
+        // suenen aunque la app esté cerrada.
+        @JavascriptInterface
+        fun syncReminders(json: String) {
+            try {
+                val anteriores = ReminderStore.load(this@MainActivity)
+                ReminderScheduler.cancelAll(this@MainActivity, anteriores)
+                val arr = org.json.JSONArray(json)
+                val nuevos = mutableListOf<Reminder>()
+                for (i in 0 until arr.length()) nuevos.add(Reminder.fromJson(arr.getJSONObject(i)))
+                ReminderStore.save(this@MainActivity, nuevos)
+                ReminderScheduler.ensureChannel(this@MainActivity)
+                nuevos.forEach { ReminderScheduler.schedule(this@MainActivity, it) }
+            } catch (e: Exception) { }
+        }
+
+        // Acciones hechas desde la notificación mientras la app estaba cerrada.
+        @JavascriptInterface
+        fun consumePendingActions(): String = try {
+            ReminderStore.consumePendingActions(this@MainActivity)
+        } catch (e: Exception) { "[]" }
+
+        @JavascriptInterface
+        fun remindersAvailable(): Boolean = true
+
+        @JavascriptInterface
+        fun notificationsEnabled(): Boolean = try {
+            androidx.core.app.NotificationManagerCompat.from(this@MainActivity).areNotificationsEnabled()
+        } catch (e: Exception) { false }
+
+        @JavascriptInterface
+        fun requestNotificationPermission() {
+            runOnUiThread {
+                if (Build.VERSION.SDK_INT >= 33) {
+                    val granted = ContextCompat.checkSelfPermission(
+                        this@MainActivity, "android.permission.POST_NOTIFICATIONS"
+                    ) == PackageManager.PERMISSION_GRANTED
+                    if (!granted) {
+                        notifPermissionLauncher.launch("android.permission.POST_NOTIFICATIONS")
+                        return@runOnUiThread
+                    }
+                }
+                ReminderScheduler.ensureChannel(this@MainActivity)
+            }
+        }
+
+        // Android 12+ puede exigir un permiso aparte para alarmas exactas.
+        @JavascriptInterface
+        fun canScheduleExactAlarms(): Boolean = try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                (getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager).canScheduleExactAlarms()
+            } else true
+        } catch (e: Exception) { true }
+
+        @JavascriptInterface
+        fun openExactAlarmSettings() {
+            runOnUiThread {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        startActivity(Intent("android.settings.REQUEST_SCHEDULE_EXACT_ALARM",
+                            Uri.parse("package:$packageName")))
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@MainActivity,
+                        "Abre Ajustes > Apps > TOM > Alarmas y recordatorios", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     // Envía un evento de voz a la web. JSONObject.quote escapa comillas y
@@ -241,7 +326,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        webView.webViewClient = WebViewClient()
+        // La web puede tardar en cargar: el recordatorio que venga de una
+        // notificación se entrega cuando la página ya está lista.
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                pageReady = true
+                deliverPendingReminder()
+            }
+        }
         webView.webChromeClient = object : WebChromeClient() {
             override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
                 AlertDialog.Builder(this@MainActivity)
@@ -295,7 +387,41 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        pendingOpenReminder = intent?.getStringExtra("open_reminder")
         webView.loadUrl("file:///android_asset/www/index.html")
+    }
+
+    // Con launchMode singleTask, tocar la notificación con la app ya abierta
+    // llega por aquí en vez de onCreate.
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val id = intent?.getStringExtra("open_reminder")
+        if (id != null) {
+            pendingOpenReminder = id
+            deliverPendingReminder()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Al volver a la app se aplican las acciones hechas en la notificación.
+        if (pageReady) {
+            webView.evaluateJavascript(
+                "window.__remindersNative && window.__remindersNative.syncFromNative()", null
+            )
+        }
+    }
+
+    private fun deliverPendingReminder() {
+        val id = pendingOpenReminder ?: return
+        if (!pageReady) return
+        pendingOpenReminder = null
+        webView.post {
+            webView.evaluateJavascript(
+                "window.__remindersNative && window.__remindersNative.openReminder(${JSONObject.quote(id)})", null
+            )
+        }
     }
 
     override fun onDestroy() {

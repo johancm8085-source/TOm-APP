@@ -1275,13 +1275,31 @@ function renderDebtList(){
     const monthPayment = d.payments[month] || 0;
     const safe = escapeHtml(name);
     const noteHtml = d.note ? `<div class="mov-note">${escapeHtml(d.note)}</div>` : '';
-    return `<div class="debt-row" style="border-left-color:${color};" data-name="${safe}">
+    // Si el pendiente tiene recordatorio, el borde izquierdo pasa a indicar la
+    // prioridad (verde/amarillo/rojo, gris si ya está realizado) en vez del
+    // avance de pago.
+    const rem = d.reminder;
+    let borde = color, remChip = '';
+    if(rem && rem.enabled && rem.date){
+      const due = typeof remDueAt === 'function' ? remDueAt(rem) : 0;
+      const clase = rem.done ? 'hecho' : rem.priority;
+      borde = rem.done ? 'var(--text-dim)'
+            : rem.priority === 'alta' ? 'var(--red)'
+            : rem.priority === 'media' ? 'var(--accent)' : 'var(--green)';
+      const f = new Date(due);
+      const cuando = due ? f.toLocaleDateString('es-ES',{day:'numeric', month:'short'}) + ' ' +
+                           f.toLocaleTimeString('es-ES',{hour:'2-digit', minute:'2-digit'}) : '';
+      const vencido = typeof remIsOverdue === 'function' && remIsOverdue(due, rem.done);
+      remChip = `<span class="rem-chip ${clase}${vencido?' vencido':''}">🔔 ${escapeHtml(cuando)}</span>`;
+    }
+    return `<div class="debt-row" style="border-left-color:${borde};" data-name="${safe}">
       <span class="drag-handle" aria-label="Reordenar ${safe}">⠿</span>
       <div class="debt-row-main" data-name="${safe}" style="flex:1;">
         ${getIcon(name, debtIcons[name])}
         <div class="debt-info">
           <div class="debt-name">${safe}</div>
           <div class="debt-meta">Deuda: ${fmt(d.totalDebt)} · Abono mes: ${fmt(monthPayment)} · <span class="pct" style="color:${color};">${Math.round(pct*100)}%</span></div>
+          ${remChip}
           ${noteHtml}
         </div>
       </div>
@@ -1363,6 +1381,7 @@ function openDebtModal(name){
   const refMonth = lunaFilterMonth.value || currentMonthKey();
   debtModalMonth.value = monthKeys.includes(refMonth) ? refMonth : monthKeys[0];
   fillDebtModalForMonth();
+  if(typeof remFillModal === 'function') remFillModal(name);
   debtModalBackdrop.classList.add('open');
 }
 
@@ -1449,6 +1468,10 @@ document.getElementById('debtModalDeleteBtn').addEventListener('click', (e)=>{
       await saveDebtItems();
       await saveDebtData();
       await saveDebtIcons();
+      // Al borrar el pendiente desaparece de la lista enviada a Android, y
+      // con ella su alarma programada.
+      if(typeof remSyncNative === 'function') remSyncNative();
+      if(typeof remRenderAll === 'function') remRenderAll();
       renderDebtList();
     });
   });
@@ -1491,7 +1514,11 @@ document.getElementById('debtModalSave').addEventListener('click', async ()=>{
   debtData[name].totalDebt = totalDebt;
   debtData[name].payments[month] = payment;
   debtData[name].note = note;
+  // Guarda también los campos del recordatorio y reprograma la alarma nativa.
+  if(typeof remReadModal === 'function') remReadModal(name);
   await saveDebtData();
+  if(typeof remSyncNative === 'function') remSyncNative();
+  if(typeof remRenderAll === 'function') remRenderAll();
   if(window.onLunaReact){
     const paidTotal = Object.values(debtData[name].payments).reduce((a,b)=>a+b, 0);
     const paidOff = totalDebt > 0 && paidTotal >= totalDebt;
