@@ -1,8 +1,8 @@
 // Service worker de TOM - Agenda de gastos
 // Guarda una copia de la app en el celular para que funcione sin internet.
-const CACHE_NAME = 'tom-cache-v8';
+const CACHE_NAME = 'tom-cache-v9';
 const ASSETS_TO_CACHE = [
-  './', './index.html', './styles.css', './dragsort.js', './voice.js', './app.js',
+  './', './index.html', './styles.css', './dragsort.js', './voice.js', './ui.js', './app.js',
   './reminders.js', './inventory.js', './stats.js', './mascot.js', './manifest.json',
   './icon-192.png', './icon-512.png', './logo-small.png', './luna-logo-small.png'
 ];

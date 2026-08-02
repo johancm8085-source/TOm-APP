@@ -463,17 +463,9 @@ async function saveActiveIcons(){
   else await saveItemIcons(currentTab);
 }
 
-document.querySelectorAll('.tab').forEach(el=>{
-  el.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    el.classList.add('active');
-    currentTab = el.dataset.tab;
-    document.getElementById('selectBtnInner').textContent = 'Elegir ítem';
-    populateFilters();
-    renderMenu();
-    render();
-  });
-});
+// El cambio entre Gastos/Entretenimiento/Ahorro lo maneja ahora el selector
+// desplegable del shell (uiSetScope en ui.js). Las pestañas de Estadísticas
+// siguen existiendo y se sincronizan con él.
 
 const fMonth = document.getElementById('filterMonth');
 const filterDayBtn = document.getElementById('filterDayBtn');
@@ -601,53 +593,47 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkDa
 window.addEventListener('focus', checkDateRollover);
 window.addEventListener('pageshow', checkDateRollover);
 
-const balanceModeSelect = document.getElementById('balanceModeSelect');
-const balanceEditHint = document.getElementById('balanceEditHint');
+// Solo tres vistas del resumen son editables tocando la cifra: el saldo en
+// efectivo, el presupuesto del mes y la meta de ahorro. El resto son valores
+// calculados, así que no hace falta explicarlo con un texto en pantalla.
+const SUMMARY_EDITABLE = { saldo:1, presupuesto:1, meta:1 };
 
 function updateBalanceModeUI(){
-  if(balanceMode === 'total'){
-    balanceEl.style.cursor = 'default';
-    balanceEl.classList.add('total-mode');
-    balanceEditHint.textContent = 'Vista total de las 3 pestañas (no editable)';
-  } else if(balanceMode === 'dia'){
-    balanceEl.style.cursor = 'default';
-    balanceEl.classList.remove('total-mode');
-    balanceEditHint.textContent = 'Total de gastos de hoy (no editable)';
-  } else {
-    balanceEl.style.cursor = 'pointer';
-    balanceEl.classList.remove('total-mode');
-    balanceEditHint.textContent = '';
-  }
+  const editable = !!SUMMARY_EDITABLE[balanceMode];
+  balanceEl.style.cursor = editable ? 'pointer' : 'default';
+  balanceEl.classList.toggle('total-mode', balanceMode === 'total');
 }
-
-balanceModeSelect.addEventListener('change', ()=>{
-  balanceMode = balanceModeSelect.value;
-  updateBalanceModeUI();
-  render();
-});
 
 const balanceEl = document.getElementById('balance');
 balanceEl.addEventListener('click', ()=>{
-  if(balanceMode === 'total' || balanceMode === 'dia') return;
+  if(!SUMMARY_EDITABLE[balanceMode]) return;
+  const modo = balanceMode;
+  const actual = modo === 'saldo' ? initialBalance[currentTab]
+               : modo === 'presupuesto' ? (monthlyBudget[currentTab] || '')
+               : (savingsGoal || '');
   const input = document.createElement('input');
   input.type = 'number';
   input.step = '0.01';
   input.id = 'balanceInput';
-  input.value = initialBalance[currentTab];
+  input.value = actual;
   balanceEl.replaceWith(input);
   input.focus();
   input.select();
 
+  let hecho = false;
   async function commit(){
+    if(hecho) return; hecho = true;
     const val = parseFloat(input.value);
-    initialBalance[currentTab] = isNaN(val) ? 0 : val;
-    await saveInitialBalance(currentTab);
+    const num = isNaN(val) ? 0 : val;
+    if(modo === 'saldo'){ initialBalance[currentTab] = num; await saveInitialBalance(currentTab); }
+    else if(modo === 'presupuesto'){ monthlyBudget[currentTab] = Math.max(0, num); await saveBudget(currentTab); }
+    else { savingsGoal = Math.max(0, num); await saveSavingsGoal(); }
     input.replaceWith(balanceEl);
     render();
   }
   input.addEventListener('keydown', e=>{
     if(e.key === 'Enter'){ e.preventDefault(); commit(); }
-    if(e.key === 'Escape'){ input.replaceWith(balanceEl); }
+    if(e.key === 'Escape'){ hecho = true; input.replaceWith(balanceEl); }
   });
   input.addEventListener('blur', commit);
 });
@@ -864,6 +850,8 @@ document.getElementById('form').addEventListener('submit', async e=>{
   renderMenu();
   populateFilters();
   render();
+  // Guardar cierra la hoja y deja la información ya actualizada detrás.
+  if(typeof Sheet !== 'undefined' && Sheet.isOpen && Sheet.isOpen()) Sheet.close();
 });
 
 async function deleteMov(id){
@@ -1012,55 +1000,82 @@ function editAmountInline(displayElId, currentVal, onSave){
 
 let __goalJustReached = false;
 
-function updateGoalAndBudgetCards(){
-  const goalCard = document.getElementById('savingsGoalCard');
-  const budgetCard = document.getElementById('budgetCard');
-  if(currentTab === 'ahorro'){
-    goalCard.style.display = '';
-    budgetCard.style.display = 'none';
-    const current = Math.max(0, computeTabBalance('ahorro'));
-    document.getElementById('savingsGoalCurrent').textContent = fmt(current);
-    document.getElementById('savingsGoalTarget').textContent = fmt(savingsGoal);
-    const pct = savingsGoal > 0 ? Math.min(100, Math.round(current/savingsGoal*100)) : 0;
-    document.getElementById('savingsGoalBar').style.width = pct + '%';
-    document.getElementById('savingsGoalPct').textContent = savingsGoal > 0 ? pct + '% de tu meta' : 'Toca el monto para fijar una meta';
-    const goalReachedNow = savingsGoal > 0 && current >= savingsGoal;
-    if(goalReachedNow && !__goalJustReached && window.onTomReact) window.onTomReact('smile');
-    __goalJustReached = goalReachedNow;
-  } else {
-    goalCard.style.display = 'none';
-    budgetCard.style.display = '';
+// Pinta la tarjeta única de Resumen Financiero según la vista elegida.
+// Sustituye a las tres tarjetas separadas sin perder ninguna de sus vistas:
+// cada una es ahora una opción del selector.
+function renderSummary(totalIn, totalOut){
+  const valorEl = document.getElementById('balance');
+  const subEl = document.getElementById('summarySub');
+  const progEl = document.getElementById('summaryProgress');
+  const barEl = document.getElementById('summaryBar');
+  const pctEl = document.getElementById('summaryPct');
+
+  let valor = '', sub = '', mostrarBarra = false, pct = 0, claseBarra = '', tono = '';
+
+  if(balanceMode === 'total'){
+    valor = fmt(computeTotal());
+    sub = 'Suma de Gastos, Entretenimiento y Ahorro';
+  } else if(balanceMode === 'dia'){
+    valor = fmt(computeTodayExpenses());
+    sub = 'Gastado hoy';
+    tono = 'neg';
+  } else if(balanceMode === 'entradas'){
+    valor = fmt(totalIn);
+    sub = 'Entradas del filtro activo';
+    tono = 'pos';
+  } else if(balanceMode === 'gastos'){
+    valor = fmt(totalOut);
+    sub = 'Gastos del filtro activo';
+    tono = 'neg';
+  } else if(balanceMode === 'balance'){
+    const net = totalIn - totalOut;
+    valor = (net >= 0 ? '+' : '−') + fmt(Math.abs(net));
+    sub = `Entradas ${fmt(totalIn)} · Gastos ${fmt(totalOut)}`;
+    tono = net >= 0 ? 'pos' : 'neg';
+  } else if(balanceMode === 'presupuesto'){
     const monthKey = fMonth.value || todayStr().slice(0,7);
-    const spent = data[currentTab].filter(m=>m.type==='out' && m.date.slice(0,7)===monthKey).reduce((s,m)=>s+m.amount,0);
-    const budget = monthlyBudget[currentTab] || 0;
-    document.getElementById('budgetCurrent').textContent = fmt(spent);
-    document.getElementById('budgetTarget').textContent = fmt(budget);
-    const pct = budget > 0 ? Math.min(100, Math.round(spent/budget*100)) : 0;
-    const bar = document.getElementById('budgetBar');
-    bar.style.width = pct + '%';
-    bar.classList.toggle('danger', budget > 0 && spent >= budget);
-    bar.classList.toggle('warn', budget > 0 && spent < budget && spent/budget >= 0.8);
-    document.getElementById('budgetPct').textContent = budget > 0 ? pct + '% usado' : 'Toca el monto para fijar un presupuesto';
+    const gastado = data[currentTab].filter(m=>m.type==='out' && m.date.slice(0,7)===monthKey).reduce((s,m)=>s+m.amount,0);
+    const pres = monthlyBudget[currentTab] || 0;
+    valor = fmt(pres);
+    pct = pres > 0 ? Math.min(100, Math.round(gastado/pres*100)) : 0;
+    sub = pres > 0 ? `${fmt(gastado)} usados de ${fmt(pres)}` : 'Sin presupuesto fijado';
+    mostrarBarra = true;
+    claseBarra = pres > 0 && gastado >= pres ? 'danger' : (pres > 0 && gastado/pres >= 0.8 ? 'warn' : '');
+  } else if(balanceMode === 'meta'){
+    const actual = Math.max(0, computeTabBalance('ahorro'));
+    valor = fmt(savingsGoal);
+    pct = savingsGoal > 0 ? Math.min(100, Math.round(actual/savingsGoal*100)) : 0;
+    sub = savingsGoal > 0 ? `${fmt(actual)} ahorrados de ${fmt(savingsGoal)}` : 'Sin meta fijada';
+    mostrarBarra = true;
+    const alcanzada = savingsGoal > 0 && actual >= savingsGoal;
+    if(alcanzada && !__goalJustReached && window.onTomReact) window.onTomReact('smile');
+    __goalJustReached = alcanzada;
+  } else {
+    valor = fmt(initialBalance[currentTab] + totalIn - totalOut);
+    sub = `Entradas ${fmt(totalIn)} · Gastos ${fmt(totalOut)}`;
+  }
+
+  valorEl.textContent = valor;
+  valorEl.classList.toggle('pos', tono === 'pos');
+  valorEl.classList.toggle('neg', tono === 'neg');
+  subEl.textContent = sub;
+  progEl.style.display = mostrarBarra ? '' : 'none';
+  if(mostrarBarra){
+    barEl.style.width = pct + '%';
+    barEl.className = 'goal-bar-fill' + (claseBarra ? ' ' + claseBarra : '');
+    pctEl.textContent = pct + '%';
+  }
+  updateBalanceModeUI();
+
+  // La meta de ahorro sigue vigilándose aunque no sea la vista activa, para
+  // que la reacción de TOM al alcanzarla no dependa de qué estés mirando.
+  if(balanceMode !== 'meta'){
+    const actual = Math.max(0, computeTabBalance('ahorro'));
+    const alcanzada = savingsGoal > 0 && actual >= savingsGoal;
+    if(alcanzada && !__goalJustReached && window.onTomReact) window.onTomReact('smile');
+    __goalJustReached = alcanzada;
   }
 }
-
-document.getElementById('savingsGoalCard').addEventListener('click', (e)=>{
-  if(e.target.tagName === 'INPUT') return;
-  editAmountInline('savingsGoalTarget', savingsGoal, async (val)=>{
-    savingsGoal = val;
-    await saveSavingsGoal();
-    render();
-  });
-});
-
-document.getElementById('budgetCard').addEventListener('click', (e)=>{
-  if(e.target.tagName === 'INPUT') return;
-  editAmountInline('budgetTarget', monthlyBudget[currentTab], async (val)=>{
-    monthlyBudget[currentTab] = val;
-    await saveBudget(currentTab);
-    render();
-  });
-});
 
 const searchInput = document.getElementById('searchInput');
 const sortSelect = document.getElementById('sortSelect');
@@ -1079,24 +1094,10 @@ function render(){
     if(m.type==='in') totalIn += m.amount; else totalOut += m.amount;
   });
 
-  document.getElementById('balance').textContent = balanceMode === 'total'
-    ? fmt(computeTotal())
-    : balanceMode === 'dia'
-      ? fmt(computeTodayExpenses())
-      : fmt(initialBalance[currentTab] + totalIn - totalOut);
-  document.getElementById('totalIn').textContent = fmt(totalIn);
-  document.getElementById('totalOut').textContent = fmt(totalOut);
-
-  const net = totalIn - totalOut;
-  const netEl = document.getElementById('netBalance');
-  const netChip = document.getElementById('netBalanceChip');
-  netEl.textContent = (net >= 0 ? '+' : '-') + fmt(Math.abs(net));
-  netChip.classList.toggle('positive', net >= 0);
-  netChip.classList.toggle('negative', net < 0);
+  renderSummary(totalIn, totalOut);
 
   renderChart(list);
   renderInsights();
-  updateGoalAndBudgetCards();
 
   const searchQ = (searchInput.value || '').trim().toLowerCase();
   const sortMode = sortSelect.value;
@@ -1124,7 +1125,7 @@ function render(){
     if(m.type === 'out' && avgOut && m.amount > avgOut * 1.6) badges.push('<span class="mov-badge high">⚠ Alto</span>');
     if(m.type === 'out' && isRecurring(m.desc)) badges.push('<span class="mov-badge recurring">🔁 Recurrente</span>');
     const badgesHtml = badges.length ? `<div class="mov-badges">${badges.join('')}</div>` : '';
-    return `<div class="mov">
+    return `<div class="mov" data-id="${m.id}">
       <div class="mov-left">
         ${getIcon(m.desc, iconMap[m.desc])}
         <div>
@@ -1134,14 +1135,18 @@ function render(){
           ${badgesHtml}
         </div>
       </div>
-      <div style="display:flex; align-items:center;">
-        <div class="mov-amount ${m.type}">${m.type==='in'?'+':'-'}${fmt(m.amount)}</div>
-        <button class="del" onclick="duplicateMov('${m.id}')" title="Duplicar hoy" aria-label="Duplicar movimiento">⎘</button>
-        <button class="del" onclick="openMovModal('${m.id}')" title="Editar" aria-label="Editar movimiento">&#9998;</button>
-        <button class="del" onclick="deleteMov('${m.id}')" title="Eliminar" aria-label="Eliminar movimiento">×</button>
-      </div>
+      <div class="mov-amount ${m.type}">${m.type==='in'?'+':'−'}${fmt(m.amount)}</div>
     </div>`;
   }).join('');
+
+  // Editar, duplicar y eliminar ya no ocupan sitio de forma permanente:
+  // se abren con una pulsación prolongada sobre el movimiento.
+  movsEl.querySelectorAll('.mov').forEach(row=>{
+    if(typeof attachLongPress === 'function'){
+      attachLongPress(row, ()=> uiMovContext(row.dataset.id));
+    }
+    row.addEventListener('click', ()=> openMovModal(row.dataset.id));
+  });
 }
 
 // Lee los colores del tema activo en vez de usar valores fijos, para que
@@ -1627,49 +1632,51 @@ document.getElementById('restoreFileInput').addEventListener('change', (e)=>{
   reader.readAsText(file);
 });
 
-const appModeSelect = document.getElementById('appModeSelect');
 const tomSection = document.getElementById('tomSection');
 const lunaSection = document.getElementById('lunaSection');
 const statsSection = document.getElementById('statsSection');
 const inventarioSection = document.getElementById('inventarioSection');
 const aparienciaSection = document.getElementById('aparienciaSection');
 
-// El botón atrás de Android debe regresar primero al menú TOM (si elegiste
-// Luna/Apariencia por error) y solo preguntar si salir cuando ya estás en TOM.
+// El botón atrás de Android debe regresar primero a TOM (si entraste a otra
+// sección por error) y solo preguntar si salir cuando ya estás en TOM.
 let modeHistoryPushed = false;
 
 function goToMode(mode){
+  // Si hay una hoja abierta, se cierra al navegar para no dejarla huérfana.
+  if(typeof Sheet !== 'undefined' && Sheet.isOpen && Sheet.isOpen()) Sheet.close();
+
+  if(mode === 'tom' && modeHistoryPushed){
+    history.back();      // el popstate hará el goToMode('tom') real
+    return;
+  }
+  if(mode !== 'tom' && mode !== appMode){
+    if(!modeHistoryPushed){
+      history.pushState({ tomAppMode: mode }, '', '');
+      modeHistoryPushed = true;
+    } else {
+      history.replaceState({ tomAppMode: mode }, '', '');
+    }
+  }
+  applyMode(mode);
+}
+
+function applyMode(mode){
   appMode = mode;
-  if(appModeSelect.value !== mode) appModeSelect.value = mode;
   tomSection.style.display = mode === 'tom' ? '' : 'none';
   lunaSection.style.display = mode === 'luna' ? '' : 'none';
   statsSection.style.display = mode === 'stats' ? '' : 'none';
   inventarioSection.style.display = mode === 'inventario' ? '' : 'none';
   aparienciaSection.style.display = mode === 'apariencia' ? '' : 'none';
+  if(typeof uiSyncNav === 'function') uiSyncNav();
   if(mode === 'stats' && typeof renderStats === 'function') renderStats();
   if(mode === 'inventario' && typeof invRenderAll === 'function') invRenderAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
-appModeSelect.addEventListener('change', ()=>{
-  const newMode = appModeSelect.value;
-  if(newMode === 'tom' && modeHistoryPushed){
-    history.back();
-    return;
-  }
-  if(newMode !== 'tom'){
-    if(!modeHistoryPushed){
-      history.pushState({ tomAppMode: newMode }, '', '');
-      modeHistoryPushed = true;
-    } else {
-      history.replaceState({ tomAppMode: newMode }, '', '');
-    }
-  }
-  goToMode(newMode);
-});
 
 window.addEventListener('popstate', ()=>{
   modeHistoryPushed = false;
-  goToMode('tom');
+  applyMode('tom');
 });
 
 // --- Apariencia: paleta de colores personalizable ---
@@ -1851,8 +1858,7 @@ VoiceRouter.register({
     const mode = map[dest];
     if(!mode) return;
     session.close();
-    appModeSelect.value = mode;
-    appModeSelect.dispatchEvent(new Event('change'));
+    goToMode(mode);
   }
 });
 
@@ -1860,6 +1866,7 @@ renderPresetGrid();
 renderThemeColorGrid();
 renderThemePreviewIcons();
 
+initUI();
 updateBalanceModeUI();
 loadData();
 loadDebts().then(()=>{

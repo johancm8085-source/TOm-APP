@@ -16,14 +16,41 @@
 </head>
 <body>
 
-<div class="logo">TOM</div>
-<select id="appModeSelect" aria-label="Sección de la app">
-  <option value="tom">TOM</option>
-  <option value="luna">Luna</option>
-  <option value="inventario">📦 Inventario</option>
-  <option value="stats">📊 Estadísticas</option>
-  <option value="apariencia">🎨 Apariencia</option>
-</select>
+<header class="appbar">
+  <div class="appbar-brand">TOM</div>
+  <div class="seg" role="tablist" aria-label="Sección principal">
+    <button type="button" class="seg-btn active" data-mode="tom" role="tab">TOM</button>
+    <button type="button" class="seg-btn" data-mode="luna" role="tab">Luna</button>
+  </div>
+  <button type="button" class="appbar-btn" id="settingsBtn" aria-label="Ajustes">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+</header>
+
+<!-- Hoja inferior genérica: la reutilizan ajustes, formularios, menús
+     contextuales y accesos rápidos, para no duplicar estructura ni estilos. -->
+<div class="sheet-backdrop" id="sheetBackdrop">
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <span class="sheet-title" id="sheetTitle"></span>
+      <button type="button" class="sheet-close" id="sheetClose" aria-label="Cerrar">×</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+</div>
+
+<div class="fab-wrap" id="fabWrap">
+  <div class="fab-menu" id="fabMenu"></div>
+  <button type="button" class="fab" id="fab" aria-label="Agregar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <path d="M12 5v14M5 12h14"/>
+    </svg>
+  </button>
+</div>
 
 <div class="modal-backdrop" id="confirmModalBackdrop">
   <div class="modal-box">
@@ -104,86 +131,40 @@
   </div>
 </div>
 
-<div class="tabs">
-  <div class="tab active" data-tab="gastos">Gastos</div>
-  <div class="tab" data-tab="entretenimiento">Entretenimiento</div>
-  <div class="tab" data-tab="ahorro">Ahorro</div>
-</div>
-
 <div class="wrap">
+
+  <button type="button" class="scope-select" id="scopeBtn">
+    <span id="scopeLabel">Gastos</span>
+    <span class="chevron">⌄</span>
+  </button>
 
   <div class="insights-banner" id="insightsBanner" style="display:none;"></div>
 
-  <div class="balance-card">
-    <div class="balance-label">Dinero</div>
-    <select id="balanceModeSelect" aria-label="Tipo de saldo a mostrar">
-      <option value="saldo">Saldo</option>
-      <option value="total">Total</option>
-      <option value="dia">Gastos del día</option>
-    </select>
-    <div class="balance-amount" id="balance">$0</div>
-    <div class="balance-edit-hint" id="balanceEditHint"></div>
-    <div class="balance-stats">
-      <div class="stat-chip in">
-        <span class="stat-arrow">▲</span>
-        <div>
-          <div class="stat-label">Entradas</div>
-          <div class="stat-value" id="totalIn">$0</div>
-        </div>
-      </div>
-      <div class="stat-chip out">
-        <span class="stat-arrow">▼</span>
-        <div>
-          <div class="stat-label">Gastos</div>
-          <div class="stat-value" id="totalOut">$0</div>
-        </div>
-      </div>
-      <div class="stat-chip" id="netBalanceChip">
-        <span class="stat-arrow">●</span>
-        <div>
-          <div class="stat-label">Balance</div>
-          <div class="stat-value" id="netBalance">$0</div>
-        </div>
-      </div>
+  <!-- Resumen Financiero: una sola tarjeta con selector. Sustituye a las tres
+       tarjetas independientes (saldo, meta de ahorro y presupuesto) sin perder
+       ninguna de sus vistas. -->
+  <div class="summary-card">
+    <button type="button" class="summary-selector" id="summarySelBtn">
+      <span id="summarySelLabel">Saldo</span>
+      <span class="chevron">⌄</span>
+    </button>
+    <div class="summary-value" id="balance">$0</div>
+    <div class="summary-sub" id="summarySub"></div>
+    <div class="summary-progress" id="summaryProgress" style="display:none;">
+      <div class="goal-bar-track"><div class="goal-bar-fill" id="summaryBar"></div></div>
+      <div class="goal-pct" id="summaryPct"></div>
     </div>
   </div>
 
-  <div class="goal-card" id="savingsGoalCard" style="display:none;">
-    <div class="goal-row">
-      <span class="goal-title">🎯 Meta de ahorro</span>
-      <span class="goal-edit-hint">Toca para cambiar la meta</span>
-    </div>
-    <div class="goal-amounts">
-      <span id="savingsGoalCurrent">$0</span>
-      <span class="goal-sep">de</span>
-      <span class="goal-target" id="savingsGoalTarget">$0</span>
-    </div>
-    <div class="goal-bar-track"><div class="goal-bar-fill" id="savingsGoalBar"></div></div>
-    <div class="goal-pct" id="savingsGoalPct">0%</div>
+  <div class="toolbar">
+    <select id="filterMonth" aria-label="Mes"><option value="">Mes</option></select>
+    <button type="button" class="chip-btn" id="filterDayBtn">Días</button>
+    <button type="button" class="chip-btn icon-only" id="searchToggleBtn" aria-label="Buscar y ordenar">🔎</button>
+    <button type="button" class="chip-btn icon-only" id="chartToggleBtn" aria-label="Gráfica">📊</button>
   </div>
 
-  <div class="goal-card" id="budgetCard" style="display:none;">
-    <div class="goal-row">
-      <span class="goal-title">📌 Presupuesto del mes</span>
-      <span class="goal-edit-hint">Toca para cambiar el presupuesto</span>
-    </div>
-    <div class="goal-amounts">
-      <span id="budgetCurrent">$0</span>
-      <span class="goal-sep">de</span>
-      <span class="goal-target" id="budgetTarget">$0</span>
-    </div>
-    <div class="goal-bar-track"><div class="goal-bar-fill" id="budgetBar"></div></div>
-    <div class="goal-pct" id="budgetPct">0%</div>
-  </div>
-
-  <div class="filters">
-    <select id="filterMonth"><option value="">Mes</option></select>
-    <button type="button" class="day-filter-btn" id="filterDayBtn">Días</button>
-    <button type="button" class="day-filter-btn" id="chartToggleBtn">📊 Gráfica</button>
-  </div>
-
-  <div class="filters">
-    <input type="text" id="searchInput" placeholder="🔎 Buscar movimiento..." aria-label="Buscar movimiento">
+  <div class="filters" id="searchRow" style="display:none;">
+    <input type="text" id="searchInput" placeholder="Buscar movimiento..." aria-label="Buscar movimiento">
     <select id="sortSelect" aria-label="Ordenar movimientos">
       <option value="date-desc">Más recientes</option>
       <option value="date-asc">Más antiguos</option>
@@ -210,33 +191,38 @@
     </div>
   </div>
 
-  <div class="items-block">
-    <div class="items-title" id="listTitle">Lista</div>
-    <div class="select-wrap" id="selectWrap">
-      <button type="button" class="select-btn" id="selectBtn">
-        <span class="select-btn-inner" id="selectBtnInner">Elegir ítem</span>
-        <span class="chevron">⌄</span>
-      </button>
-      <div class="select-menu" id="selectMenu"></div>
+  <!-- El formulario ya no vive en la pantalla: la hoja inferior lo toma
+       prestado de aquí al abrirse y lo devuelve al cerrar, así conserva
+       intacto todo su cableado (lista de ítems, voz, validación). -->
+  <div id="entryFormHost" hidden>
+    <div class="items-block">
+      <div class="items-title" id="listTitle">Lista</div>
+      <div class="select-wrap" id="selectWrap">
+        <button type="button" class="select-btn" id="selectBtn">
+          <span class="select-btn-inner" id="selectBtnInner">Elegir ítem</span>
+          <span class="chevron">⌄</span>
+        </button>
+        <div class="select-menu" id="selectMenu"></div>
+      </div>
     </div>
-  </div>
 
-  <form id="form">
-    <input id="f-desc" type="text" placeholder="Descripción" required>
-    <input id="f-amount" type="number" step="0.01" min="0.01" placeholder="Monto" required>
-    <select id="f-type">
-      <option value="out">Gasto</option>
-      <option value="in">Ingreso</option>
-    </select>
-    <input id="f-note" type="text" placeholder="Nota (opcional)">
-    <button type="button" class="voice-mic-btn" data-voice-form="movimiento" aria-label="Registrar por voz" title="Registrar por voz">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/>
-        <path d="M5 11a7 7 0 0 0 14 0 M12 18v3 M9 21h6"/>
-      </svg>
-    </button>
-    <button type="submit">Agregar</button>
-  </form>
+    <form id="form">
+      <input id="f-desc" type="text" placeholder="Descripción" required>
+      <input id="f-amount" type="number" step="0.01" min="0.01" placeholder="Monto" required>
+      <select id="f-type">
+        <option value="out">Gasto</option>
+        <option value="in">Ingreso</option>
+      </select>
+      <input id="f-note" type="text" placeholder="Nota (opcional)">
+      <button type="button" class="voice-mic-btn" data-voice-form="movimiento" aria-label="Registrar por voz" title="Registrar por voz">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/>
+          <path d="M5 11a7 7 0 0 0 14 0 M12 18v3 M9 21h6"/>
+        </svg>
+      </button>
+      <button type="submit">Agregar</button>
+    </form>
+  </div>
 
   <div class="movs" id="movs"></div>
 
@@ -696,6 +682,7 @@
 
 <script src="dragsort.js"></script>
 <script src="voice.js"></script>
+<script src="ui.js"></script>
 <script src="app.js"></script>
 <script src="reminders.js"></script>
 <script src="inventory.js"></script>
