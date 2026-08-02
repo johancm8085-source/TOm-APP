@@ -834,6 +834,131 @@
   .legend-row.clickable{ cursor:pointer; border-radius:8px; padding:4px 6px; margin:-4px -6px; transition: background .12s; }
   .legend-row.clickable:hover{ background: var(--panel); }
 
+  /* --- Acerca de --- */
+  .about{ font-family: system-ui, sans-serif; text-align:center; padding-bottom:6px; }
+  .about-hero{ display:flex; justify-content:center; gap:14px; margin-bottom:14px; }
+  .about-mascot{
+    width:56px; height:56px; border-radius:18px; object-fit:cover;
+    border:1px solid var(--border); box-shadow: var(--shadow-sm);
+  }
+  .about-app{
+    font-size:15px; font-weight:800; letter-spacing:3px; color: var(--gold);
+    margin-bottom:10px;
+  }
+  .about-phrase{
+    font-family:'Georgia','Times New Roman',serif; font-size:15.5px; font-style:italic;
+    color: var(--accent); line-height:1.55; max-width:400px; margin:0 auto 26px;
+    animation: about-fade .5s ease-out 1;
+  }
+  @keyframes about-fade{ from{ opacity:0; transform: translateY(6px); } to{ opacity:1; transform:none; } }
+
+  .about-section{ text-align:left; margin-bottom:26px; }
+  .about-title{
+    font-size:11.5px; text-transform:uppercase; letter-spacing:1.2px;
+    color: var(--text-dim); text-align:center; margin-bottom:12px;
+  }
+  .about-rule{
+    height:1px; background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin:12px 0;
+  }
+  .about-section p{
+    font-size:14.5px; line-height:1.7; color: var(--text); margin:0 0 12px;
+    opacity:0.92;
+  }
+
+  .signature-card{
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border:1px solid var(--border); border-radius:20px;
+    padding:22px 20px; margin-bottom:14px; box-shadow: var(--shadow-sm);
+  }
+  .signature-line{
+    height:1px; background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity:0.55;
+  }
+  .signature-label{
+    font-size:11.5px; text-transform:uppercase; letter-spacing:1px;
+    color: var(--text-dim); margin:16px 0 8px;
+  }
+  .signature-name{
+    display:inline-block; background:none; border:none; box-shadow:none; padding:2px 8px;
+    font-family:'Georgia','Times New Roman',serif; font-size:27px; font-weight:700;
+    color: var(--gold); letter-spacing:0.5px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; transition: transform .18s;
+  }
+  .signature-name:hover{ background:none; box-shadow:none; transform:none; color: var(--gold); }
+  .signature-name.tapped{ animation: sig-tap .22s ease-out 1; }
+  @keyframes sig-tap{ 0%,100%{ transform:scale(1); } 45%{ transform:scale(1.07); } }
+  .signature-quote{
+    font-size:13.5px; font-style:italic; color: var(--text-dim);
+    line-height:1.65; margin:10px auto 16px; max-width:340px;
+  }
+  .about-origin{
+    display:flex; justify-content:center; gap:14px; font-size:12.5px;
+    color: var(--text-dim); margin-bottom:28px;
+  }
+  .about-foot{
+    border-top:1px solid var(--border); padding-top:16px; margin-top:8px;
+    font-size:11px; color: var(--text-dim); line-height:1.9; opacity:0.68;
+  }
+
+  /* --- Homenaje: TOM y Luna se encuentran --- */
+  .egg-layer{
+    position:fixed; inset:0; z-index:400; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:26px;
+    background: color-mix(in srgb, var(--bg) 94%, transparent);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    opacity:0; transition: opacity .45s ease;
+  }
+  .egg-layer.run{ opacity:1; }
+  .egg-layer.out{ opacity:0; }
+  .egg-stage{ display:flex; align-items:flex-end; justify-content:center; gap:18px; }
+  .egg-mascot{ position:relative; width:96px; height:96px; will-change: transform; }
+  .egg-mascot img{
+    width:100%; height:100%; border-radius:26px; object-fit:cover;
+    border:1px solid var(--border); box-shadow: var(--shadow-md);
+  }
+  /* Entran caminando desde lados opuestos, con un pequeño rebote de paso. */
+  .egg-tom{ transform: translateX(-62vw); }
+  .egg-luna{ transform: translateX(62vw); }
+  .egg-layer.run .egg-tom{ animation: egg-walk-l 1.25s cubic-bezier(.32,.72,.35,1) forwards, egg-step .32s ease-in-out 4; }
+  .egg-layer.run .egg-luna{ animation: egg-walk-r 1.25s cubic-bezier(.32,.72,.35,1) forwards, egg-step .32s ease-in-out 4; }
+  @keyframes egg-walk-l{ to{ transform: translateX(0); } }
+  @keyframes egg-walk-r{ to{ transform: translateX(0); } }
+  @keyframes egg-step{ 0%,100%{ margin-bottom:0; } 50%{ margin-bottom:9px; } }
+
+  .egg-paw{
+    position:absolute; top:-6px; width:30px; height:30px; opacity:0;
+    transform: translateY(10px) rotate(-12deg); transform-origin:60% 90%;
+    will-change: opacity, transform;
+  }
+  .egg-tom .egg-paw{ right:-8px; color: var(--gold-dim); }
+  .egg-luna .egg-paw{ left:-8px; color: var(--purple); }
+  .egg-paw svg{ width:100%; height:100%; }
+  .egg-layer.wave .egg-paw{ animation: egg-wave 1.5s ease-in-out 1 forwards; }
+  @keyframes egg-wave{
+    0%{ opacity:0; transform: translateY(10px) rotate(-12deg); }
+    12%{ opacity:1; transform: translateY(-2px) rotate(18deg); }
+    30%{ transform: translateY(-2px) rotate(-16deg); }
+    48%{ transform: translateY(-2px) rotate(16deg); }
+    66%{ transform: translateY(-2px) rotate(-14deg); }
+    84%{ opacity:1; transform: translateY(-2px) rotate(6deg); }
+    100%{ opacity:0; transform: translateY(10px) rotate(-12deg); }
+  }
+
+  .egg-message{
+    text-align:center; font-family:'Georgia','Times New Roman',serif;
+    font-size:16.5px; line-height:1.9; color: var(--text);
+    opacity:0; transform: translateY(10px); transition: opacity .6s ease, transform .6s ease;
+    padding:0 26px; max-width:460px;
+  }
+  .egg-layer.msg .egg-message{ opacity:1; transform:none; }
+  .egg-message div:last-child{ color: var(--text-dim); font-size:14.5px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .egg-layer.run .egg-tom, .egg-layer.run .egg-luna{ animation:none; transform:none; }
+    .egg-layer.wave .egg-paw{ animation:none; opacity:1; transform:none; }
+  }
+
   /* --- Recordatorios de Luna --- */
   .today-card{
     max-width:560px; margin:0 auto 20px; font-family: system-ui, sans-serif;

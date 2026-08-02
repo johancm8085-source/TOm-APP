@@ -17,6 +17,11 @@ const UI_ANIM = 240; // ms — dentro del rango 200-300 pedido
 const Sheet = {
   _backdrop: null, _el: null, _body: null, _title: null,
   _borrowed: null, _borrowedHome: null, _onClose: null, _open: false,
+  // Contador de generación: al cerrar, la limpieza se programa con un retardo
+  // (para que se vea la animación de salida). Si mientras tanto se abrió otra
+  // hoja —lo normal al elegir una opción de un menú— esa limpieza tardía
+  // borraría el contenido nuevo. El contador la anula en ese caso.
+  _gen: 0,
 
   init(){
     this._backdrop = document.getElementById('sheetBackdrop');
@@ -48,6 +53,10 @@ const Sheet = {
 
   open(title, opts){
     opts = opts || {};
+    this._gen++;
+    // Si quedaba un préstamo de una hoja anterior sin devolver, se devuelve
+    // ahora para que su nodo no acabe borrado por el innerHTML de abajo.
+    this._returnBorrowed();
     this._title.textContent = title || '';
     this._body.innerHTML = '';
     this._onClose = opts.onClose || null;
@@ -61,6 +70,9 @@ const Sheet = {
     } else if(opts.html){
       this._body.innerHTML = opts.html;
     }
+    // Quitar 'closing' por si se reabre en mitad de la animación de cierre:
+    // esa clase deja la hoja en opacidad 0 y parecería que no se abrió.
+    this._backdrop.classList.remove('closing');
     this._backdrop.classList.add('open');
     this._open = true;
     document.body.classList.add('sheet-lock');
@@ -68,20 +80,27 @@ const Sheet = {
     return this._body;
   },
 
+  _returnBorrowed(){
+    if(this._borrowed && this._borrowedHome){
+      this._borrowed.setAttribute('hidden','');
+      this._borrowedHome.appendChild(this._borrowed);
+    }
+    this._borrowed = null; this._borrowedHome = null;
+  },
+
   close(){
     if(!this._open) return;
     this._open = false;
+    const gen = ++this._gen;
     this._backdrop.classList.remove('closing');
     this._backdrop.classList.add('closing');
     const cb = this._onClose; this._onClose = null;
     setTimeout(()=>{
+      // Otra hoja se abrió mientras se cerraba esta: no tocar nada suyo.
+      if(gen !== this._gen) { if(cb) cb(); return; }
       this._backdrop.classList.remove('open','closing');
       document.body.classList.remove('sheet-lock');
-      if(this._borrowed && this._borrowedHome){
-        this._borrowed.setAttribute('hidden','');
-        this._borrowedHome.appendChild(this._borrowed);
-      }
-      this._borrowed = null; this._borrowedHome = null;
+      this._returnBorrowed();
       this._body.innerHTML = '';
       if(cb) cb();
     }, UI_ANIM);
@@ -156,7 +175,9 @@ function uiSettingsItems(){
         goToMode('inventario');
         setTimeout(()=> document.getElementById('invImportFile').click(), 260);
       } },
-    { label:'Copia de seguridad', icon:'💾', sub:'Guardar o restaurar todo', onSelect: ()=> uiOpenBackup() }
+    { label:'Copia de seguridad', icon:'💾', sub:'Guardar o restaurar todo', onSelect: ()=> uiOpenBackup() },
+    { divider:true, label:'TOM Finance' },
+    { label:'Acerca de', icon:'🐱', sub:'Filosofía, versión y créditos', onSelect: ()=> openAbout() }
   ];
 }
 
