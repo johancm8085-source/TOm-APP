@@ -122,6 +122,14 @@ function greetShow(force){
 async function initGreeting(){
   await new Promise(r=> setTimeout(r, 700));
   greetShow(false);
+
+  // En Android la app no se recarga: se queda abierta y solo vuelve del
+  // segundo plano. Sin esto, el saludo se vería el día que se instaló y nunca
+  // más, porque initGreeting() no volvería a ejecutarse jamás.
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden) greetShow(false);   // greetShow ya filtra "una vez al día"
+  });
+  window.addEventListener('focus', ()=> greetShow(false));
 }
 
 initGreeting();

@@ -127,7 +127,12 @@ function initMascot(rootId){
 
   Object.values(layers).forEach(el=>{
     if(!el) return;
-    el.addEventListener('animationend', ()=>{
+    el.addEventListener('animationend', (e)=>{
+      // animationend BURBUJEA: las capas están anidadas (blink y glow van
+      // dentro de breathe, que va dentro de tilt), así que sin este filtro el
+      // parpadeo al terminar borraba las clases de sus capas padre y cortaba
+      // la animación a media reproducción ("Feliz" moría a los 680 ms de 1100).
+      if(e.target !== el) return;
       [...el.classList].forEach(c=>{ if(c.indexOf('mt-') === 0) el.classList.remove(c); });
     });
   });
@@ -163,11 +168,15 @@ function initMascot(rootId){
   }
 
   let alive = true;
+  // Mientras se reproduce una animación de toque, las de reposo se saltan su
+  // turno: comparten las mismas capas y la cortarían por la mitad.
+  let busyUntil = 0;
+  const idle = ()=> Date.now() >= busyUntil;
 
   function loopBlink(){
     if(!alive) return;
     setTimeout(()=>{
-      if(mascotAnimEnabled) pulse(blinkEl, 'mt-blink', 160);
+      if(mascotAnimEnabled && idle()) pulse(blinkEl, 'mt-blink', 160);
       loopBlink();
     }, mascotRand(8000, 12000));
   }
@@ -175,7 +184,7 @@ function initMascot(rootId){
   function loopHeadTilt(){
     if(!alive) return;
     setTimeout(()=>{
-      if(mascotAnimEnabled){
+      if(mascotAnimEnabled && idle()){
         const cls = Math.random() < 0.5 ? 'mt-tilt-l' : 'mt-tilt-r';
         pulse(tiltEl, cls, 1400);
       }
@@ -188,7 +197,7 @@ function initMascot(rootId){
     setTimeout(()=>{
       // La inclinación de cabeza y el twitch de orejas comparten .mascot-tilt;
       // si hay una en curso, se espera al próximo ciclo para no cortarla.
-      if(mascotAnimEnabled &&
+      if(mascotAnimEnabled && idle() &&
          !tiltEl.classList.contains('mt-tilt-l') && !tiltEl.classList.contains('mt-tilt-r')){
         pulse(tiltEl, 'mt-ear', 550);
       }
@@ -206,6 +215,10 @@ function initMascot(rootId){
     if(!mascotAnimEnabled) return;
     const anim = MASCOT_ANIMATIONS[key] || MASCOT_ANIMATIONS[mascotAnimChoice] || MASCOT_ANIMATIONS[MASCOT_DEFAULT_ANIM];
     clearTapAnimations();
+    // Reserva las capas durante toda la animación para que ningún ciclo de
+    // reposo se cuele encima.
+    const dura = anim.steps.reduce((max, s)=> Math.max(max, (s.delay || 0) + (s.ms || 0)), 0);
+    busyUntil = Date.now() + dura + 120;
     anim.steps.forEach(step=>{
       const el = layers[step.el];
       if(!el) return;              // p.ej. una mascota sin cola en el DOM
