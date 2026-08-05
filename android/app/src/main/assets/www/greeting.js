@@ -59,6 +59,10 @@ function greetHide(){
   const el = document.getElementById('greetCard');
   if(!el) return;
   if(greetTimer){ clearTimeout(greetTimer); greetTimer = null; }
+  // Se le quita el id de inmediato: durante los 380 ms que dura el
+  // desvanecido la tarjeta sigue en el DOM, y sin esto un saludo nuevo no
+  // podría crearse todavía (greetShow lo vería como "ya hay uno abierto").
+  el.removeAttribute('id');
   el.classList.remove('show');
   el.classList.add('out');
   setTimeout(()=>{ if(el.parentNode) el.remove(); }, 380);
@@ -96,7 +100,9 @@ function greetShow(force){
 
   // Se marca como visto en cuanto se muestra, no al cerrarlo: si el usuario
   // cierra la app antes de que desaparezca, no debe volver a salir hoy.
-  greetMarkShown();
+  // Cuando es forzado (probarlo desde Configuración o tras cambiar el nombre)
+  // NO se marca: probar el saludo no debe consumir el saludo real del día.
+  if(!force) greetMarkShown();
 
   card.querySelector('.greet-close').addEventListener('click', (e)=>{
     e.stopPropagation();

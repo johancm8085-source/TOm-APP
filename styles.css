@@ -489,7 +489,9 @@
     transition: transform .38s cubic-bezier(.22,.9,.3,1), opacity .38s ease;
   }
   .greet-card.show{ transform: translate(-50%, 0); opacity:1; }
-  .greet-card.out{ transform: translate(-50%, -18px); opacity:0; }
+  /* pointer-events:none mientras se desvanece: si no, la tarjeta ya invisible
+     seguiría interceptando toques durante 380 ms. */
+  .greet-card.out{ transform: translate(-50%, -18px); opacity:0; pointer-events:none; }
   .greet-mascot{
     width:46px; height:46px; flex:0 0 46px; border-radius:14px; object-fit:cover;
     border:1px solid var(--border);
