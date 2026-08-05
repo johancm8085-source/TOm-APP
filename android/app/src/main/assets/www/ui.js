@@ -293,8 +293,41 @@ function uiOpenConfig(){
         }
       } },
     { label:'Restablecer colores', icon:'🎨', sub:'Volver a la paleta original',
-      onSelect: ()=> document.getElementById('themeResetBtn').click() }
+      onSelect: ()=> document.getElementById('themeResetBtn').click() },
+    { divider:true, label:'Saludo diario' },
+    { label:'Tu nombre', icon:'👋',
+      sub: typeof greetUserName === 'function' ? `TOM te saluda como “${greetUserName()}”` : '',
+      onSelect: ()=> uiOpenGreetName() },
+    { label:'Ver el saludo ahora', icon:'🐱', sub:'Para probar cómo se ve',
+      onSelect: ()=>{ if(typeof greetShow === 'function') greetShow(true); } }
   ]);
+}
+
+function uiOpenGreetName(){
+  const actual = (typeof greetUserName === 'function') ? greetUserName() : '';
+  Sheet.open('Tu nombre', { html: `
+    <div class="debt-modal-field">
+      <label>¿Cómo quieres que TOM te salude?</label>
+      <input type="text" id="greetNameInput" maxlength="24" placeholder="Johan" value="${escapeHtml(actual)}">
+    </div>
+    <div class="inv-meta-line">El saludo aparece una vez al día al abrir la app.</div>
+    <div class="debt-modal-actions">
+      <button type="button" class="btn-secondary" id="greetNameCancel">Cancelar</button>
+      <button type="button" id="greetNameSave">Guardar</button>
+    </div>`,
+    onOpen: (body)=>{
+      const input = body.querySelector('#greetNameInput');
+      setTimeout(()=>{ input.focus(); input.select(); }, 60);
+      body.querySelector('#greetNameCancel').addEventListener('click', ()=> Sheet.close());
+      body.querySelector('#greetNameSave').addEventListener('click', async ()=>{
+        if(typeof greetSetUserName === 'function') await greetSetUserName(input.value);
+        Sheet.close();
+        setTimeout(()=>{ if(typeof greetShow === 'function') greetShow(true); }, UI_ANIM);
+      });
+      input.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter'){ e.preventDefault(); body.querySelector('#greetNameSave').click(); }
+      });
+    }});
 }
 
 function uiOpenExport(){

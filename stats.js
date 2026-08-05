@@ -162,7 +162,7 @@ function renderPeriodExpense(body, period, typeFilter, titleLabel){
   } else if(period === 'semana'){
     const diffToMon = (now.getDay() + 6) % 7;
     const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMon);
-    const mondayStr = monday.toISOString().slice(0,10);
+    const mondayStr = localDateStr(monday);   // fecha local, no UTC
     curMovs = movs.filter(m=> m.date >= mondayStr && m.date <= todayStr());
   } else if(period === 'mes'){
     const key = todayStr().slice(0,7);
@@ -323,8 +323,8 @@ function renderViewTendencia(body){
   for(let i=3;i>=0;i--){
     const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i*7);
     const start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 6);
-    const startStr = start.toISOString().slice(0,10);
-    const endStr = end.toISOString().slice(0,10);
+    const startStr = localDateStr(start);     // fecha local, no UTC
+    const endStr = localDateStr(end);
     weeks.push([`Sem ${4-i}`, sumAmount(movs.filter(m=> m.date >= startStr && m.date <= endStr))]);
   }
   const last = weeks[weeks.length-1][1], prev = weeks[weeks.length-2][1];

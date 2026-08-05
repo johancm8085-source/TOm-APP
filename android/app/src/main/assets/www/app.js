@@ -89,8 +89,20 @@ let debtIcons = {}; // name -> "iconKey|color"
 let editingDebtName = null;
 let showLunaChart = false;
 
+// Fecha LOCAL en formato YYYY-MM-DD.
+// Importante: no usar toISOString(), que devuelve la fecha en UTC. En Colombia
+// (UTC-5) eso hacía que a partir de las 7 de la tarde la app ya contara el día
+// siguiente: un gasto registrado a las 9 p.m. se guardaba con fecha de mañana,
+// "Gastos del día" miraba el día equivocado y el filtro de días arrancaba en
+// una fecha que aún no existía.
+function localDateStr(d){
+  const x = d || new Date();
+  const p = (n)=>String(n).padStart(2,'0');
+  return `${x.getFullYear()}-${p(x.getMonth()+1)}-${p(x.getDate())}`;
+}
+
 function todayStr(){
-  return new Date().toISOString().slice(0,10);
+  return localDateStr();
 }
 
 function escapeHtml(s){

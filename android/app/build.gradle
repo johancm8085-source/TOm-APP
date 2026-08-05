@@ -1,21 +1,62 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
+// ============================================================================
+// Versionado automático
+// ============================================================================
+// El versionCode sube solo en cada compilación de CI (GitHub Actions pasa el
+// número de ejecución en TOM_VERSION_CODE). En local, sin esa variable, se usa
+// 1 para poder compilar sin configurar nada.
+def buildVersionCode = (System.getenv("TOM_VERSION_CODE") ?: "1") as Integer
+def buildVersionName = System.getenv("TOM_VERSION_NAME") ?: "1.0"
+
 android {
     namespace 'com.tomapp.gastos'
     compileSdk 34
 
     defaultConfig {
+        // NUNCA cambiar el applicationId: Android identifica la app por él.
+        // Cambiarlo instalaría una app distinta en vez de actualizar la actual.
         applicationId "com.tomapp.gastos"
         minSdk 24
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode buildVersionCode
+        versionName buildVersionName
+    }
+
+    // ========================================================================
+    // Firma digital — ESTA es la corrección del error
+    // "No se instaló la app debido a un conflicto con un paquete"
+    // ========================================================================
+    // Antes se compilaba con `assembleDebug` sin configurar ninguna firma, así
+    // que Gradle usaba el debug.keystore que Android genera automáticamente...
+    // y GitHub Actions arranca un runner limpio en cada ejecución, por lo que
+    // ese keystore era DISTINTO en cada compilación. Android rechaza actualizar
+    // una app si la firma no coincide con la instalada: de ahí el conflicto.
+    //
+    // Ahora todas las compilaciones (debug y release) usan el mismo keystore
+    // versionado en el repositorio, así que las actualizaciones se instalan
+    // encima conservando todos los datos del usuario.
+    //
+    // Si algún día se quiere una clave privada de verdad, basta con definir las
+    // variables de entorno TOM_KEYSTORE_* (por ejemplo desde GitHub Secrets):
+    // tienen prioridad sobre el keystore incluido, sin tocar este archivo.
+    signingConfigs {
+        tomfinance {
+            storeFile file(System.getenv("TOM_KEYSTORE_FILE") ?: "../keystore/tomfinance.jks")
+            storePassword System.getenv("TOM_KEYSTORE_PASSWORD") ?: "android"
+            keyAlias System.getenv("TOM_KEY_ALIAS") ?: "tomfinance"
+            keyPassword System.getenv("TOM_KEY_PASSWORD") ?: "android"
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.tomfinance
+        }
         release {
             minifyEnabled false
+            signingConfig signingConfigs.tomfinance
         }
     }
 

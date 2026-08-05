@@ -347,9 +347,190 @@
     75%{ opacity:0.1; }
   }
 
-  @media (prefers-reduced-motion: reduce){
-    .mascot-breathe, .mascot-tilt, .mascot-blink, .mascot-glow, .mascot-paw{ animation: none !important; }
+  /* --- Cola: asoma por detrás del marco, para la animación "Feliz" --- */
+  .mascot-tail{
+    position:absolute; left:-14px; bottom:2px; width:30px; height:30px;
+    opacity:0; transform: rotate(0deg); transform-origin: 78% 88%;
+    pointer-events:none; z-index:-1; will-change: opacity, transform;
   }
+  .mascot-tail svg{ width:100%; height:100%; }
+  .mascot-tail-tom{ color: var(--gold-dim); }
+  .mascot-tail-luna{ color: var(--purple); }
+
+  /* --- Animación 2: Feliz (cabeza, parpadeo y cola) --- */
+  .mascot-tilt.mt-happy-head{ animation: mascot-happy-head 1.1s ease-in-out 1; }
+  @keyframes mascot-happy-head{
+    0%,100%{ transform: rotate(0deg); }
+    15%{ transform: rotate(-5deg); }
+    35%{ transform: rotate(5deg); }
+    55%{ transform: rotate(-4deg); }
+    75%{ transform: rotate(3deg); }
+    90%{ transform: rotate(-1deg); }
+  }
+  .mascot-breathe.mt-happy-body{ animation: mascot-happy-body 1.1s cubic-bezier(.34,1.3,.64,1) 1; }
+  @keyframes mascot-happy-body{
+    0%,100%{ transform: scale(1) translateY(0); }
+    20%{ transform: scale(1.05) translateY(-5px); }
+    45%{ transform: scale(0.99) translateY(1px); }
+    70%{ transform: scale(1.03) translateY(-3px); }
+  }
+  .mascot-tail.mt-happy-tail{ animation: mascot-happy-tail 1.1s ease-in-out 1; }
+  @keyframes mascot-happy-tail{
+    0%,100%{ opacity:0; transform: rotate(0deg); }
+    12%{ opacity:1; transform: rotate(-22deg); }
+    30%{ transform: rotate(20deg); }
+    48%{ transform: rotate(-18deg); }
+    66%{ transform: rotate(16deg); }
+    84%{ opacity:1; transform: rotate(-6deg); }
+  }
+
+  /* --- Animación 3: Curioso (inclina y mira a ambos lados) --- */
+  .mascot-tilt.mt-curious-head{ animation: mascot-curious-head 1.7s cubic-bezier(.4,.05,.3,1) 1; }
+  @keyframes mascot-curious-head{
+    0%,100%{ transform: rotate(0deg); }
+    18%{ transform: rotate(-10deg); }
+    38%{ transform: rotate(-10deg); }
+    58%{ transform: rotate(9deg); }
+    78%{ transform: rotate(9deg); }
+    92%{ transform: rotate(2deg); }
+  }
+  /* El leve desplazamiento lateral es lo que se lee como "mirar a los lados" */
+  .mascot-breathe.mt-curious-body{ animation: mascot-curious-body 1.7s cubic-bezier(.4,.05,.3,1) 1; }
+  @keyframes mascot-curious-body{
+    0%,100%{ transform: translateX(0) scale(1); }
+    22%{ transform: translateX(-4px) scale(1.02); }
+    40%{ transform: translateX(-4px) scale(1.02); }
+    62%{ transform: translateX(4px) scale(1.02); }
+    80%{ transform: translateX(4px) scale(1.02); }
+  }
+
+  /* --- Animación 4: Estiramiento (estira y vuelve despacio) --- */
+  .mascot-breathe.mt-stretch-body{ animation: mascot-stretch-body 1.8s ease-in-out 1; }
+  @keyframes mascot-stretch-body{
+    0%{ transform: scale(1,1); }
+    22%{ transform: scale(1.07,0.93); }
+    45%{ transform: scale(1.08,0.92); }
+    62%{ transform: scale(0.97,1.05); }
+    100%{ transform: scale(1,1); }
+  }
+  .mascot-tilt.mt-stretch-head{ animation: mascot-stretch-head 1.8s ease-in-out 1; }
+  @keyframes mascot-stretch-head{
+    0%,100%{ transform: rotate(0deg) translateY(0); }
+    25%{ transform: rotate(-3deg) translateY(3px); }
+    50%{ transform: rotate(-3deg) translateY(3px); }
+    75%{ transform: rotate(1deg) translateY(-1px); }
+  }
+  .mascot-paw.mt-stretch-paw{ animation: mascot-stretch-paw 1.8s ease-in-out 1; }
+  @keyframes mascot-stretch-paw{
+    0%{ opacity:0; transform: translateY(16px) rotate(-10deg) scale(.9); }
+    18%{ opacity:1; transform: translateY(10px) rotate(28deg) scale(1.05); }
+    45%{ opacity:1; transform: translateY(14px) rotate(38deg) scale(1.12); }
+    70%{ opacity:1; transform: translateY(4px) rotate(10deg) scale(1); }
+    100%{ opacity:0; transform: translateY(16px) rotate(-10deg) scale(.9); }
+  }
+
+  /* --- Animación 5: Cariñoso (ojos cerrados, sonrisa y despedida) --- */
+  .mascot-blink.mt-love-eyes{ animation: mascot-love-eyes 1.6s ease-in-out 1; }
+  @keyframes mascot-love-eyes{
+    0%{ opacity:0; transform: scaleY(1); }
+    14%{ opacity:0.26; transform: scaleY(0.9); }
+    68%{ opacity:0.26; transform: scaleY(0.9); }
+    100%{ opacity:0; transform: scaleY(1); }
+  }
+  .mascot-glow.mt-love-glow{ animation: mascot-love-glow 1.6s ease-in-out 1; }
+  @keyframes mascot-love-glow{
+    0%,100%{ opacity:0; }
+    22%{ opacity:0.2; }
+    70%{ opacity:0.14; }
+  }
+  .mascot-breathe.mt-love-body{ animation: mascot-love-body 1.6s ease-in-out 1; }
+  @keyframes mascot-love-body{
+    0%,100%{ transform: scale(1); }
+    30%{ transform: scale(1.04); }
+    70%{ transform: scale(1.03); }
+  }
+  .mascot-tilt.mt-love-head{ animation: mascot-love-head 1.6s ease-in-out 1; }
+  @keyframes mascot-love-head{
+    0%,100%{ transform: rotate(0deg); }
+    30%{ transform: rotate(-6deg); }
+    70%{ transform: rotate(-5deg); }
+  }
+  .mascot-paw.mt-love-paw{ animation: mascot-love-paw 1.6s ease-in-out 1; }
+  @keyframes mascot-love-paw{
+    0%{ opacity:0; transform: translateY(16px) rotate(-10deg); }
+    30%{ opacity:1; transform: translateY(-3px) rotate(14deg); }
+    55%{ opacity:1; transform: translateY(-3px) rotate(2deg); }
+    78%{ opacity:1; transform: translateY(-3px) rotate(14deg); }
+    100%{ opacity:0; transform: translateY(16px) rotate(-10deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .mascot-breathe, .mascot-tilt, .mascot-blink, .mascot-glow, .mascot-paw, .mascot-tail{ animation: none !important; }
+  }
+
+  /* --- Saludo diario --- */
+  .greet-card{
+    /* Debajo de la barra superior a propósito: si se pusiera arriba del todo
+       taparía TOM/Luna y Ajustes durante los cuatro segundos que dura, y el
+       saludo no debe bloquear nada. */
+    position:fixed; left:50%; top:calc(70px + env(safe-area-inset-top)); z-index:150;
+    width:min(440px, calc(100vw - 28px));
+    display:flex; align-items:flex-start; gap:12px;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border:1px solid var(--border); border-left:4px solid var(--gold);
+    border-radius:18px; padding:14px 14px 14px 13px;
+    box-shadow: 0 10px 34px rgba(0,0,0,0.45);
+    font-family: system-ui, sans-serif; cursor:pointer;
+    transform: translate(-50%, -18px); opacity:0;
+    transition: transform .38s cubic-bezier(.22,.9,.3,1), opacity .38s ease;
+  }
+  .greet-card.show{ transform: translate(-50%, 0); opacity:1; }
+  .greet-card.out{ transform: translate(-50%, -18px); opacity:0; }
+  .greet-mascot{
+    width:46px; height:46px; flex:0 0 46px; border-radius:14px; object-fit:cover;
+    border:1px solid var(--border);
+  }
+  .greet-text{ flex:1; min-width:0; }
+  .greet-hi{ font-size:15px; font-weight:700; color: var(--gold); }
+  .greet-sub{ font-size:13px; color: var(--text-dim); margin-top:3px; line-height:1.45; }
+  .greet-ask{ font-size:13px; color: var(--text); margin-top:6px; }
+  .greet-close{
+    flex:0 0 auto; background:none; border:none; box-shadow:none;
+    color: var(--text-dim); font-size:20px; line-height:1; padding:0 2px;
+  }
+  .greet-close:hover{ color: var(--red); background:none; transform:none; box-shadow:none; }
+
+  /* --- Panel de animaciones --- */
+  .anim-toggle{ margin-bottom:14px; }
+  #animPanel.anim-off{ opacity:0.45; pointer-events:none; }
+  #animPanel.anim-off .anim-play-btn{ pointer-events:auto; }
+  .anim-preview{
+    display:flex; align-items:center; gap:16px; margin-bottom:16px;
+    background: var(--panel); border:1px solid var(--border);
+    border-radius:18px; padding:16px;
+  }
+  .anim-preview .mascot{ flex:0 0 84px; }
+  .anim-preview-side{ flex:1; min-width:0; }
+  .anim-preview-name{ font-size:16px; font-weight:700; color: var(--text); }
+  .anim-preview-desc{ font-size:12.5px; color: var(--text-dim); margin:3px 0 10px; line-height:1.4; }
+  .anim-play-btn{ font-size:13px; padding:9px 14px; width:100%; }
+  .anim-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  .anim-card{
+    position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:3px;
+    background: var(--panel); border:1px solid var(--border); color: var(--text);
+    border-radius:14px; padding:12px 12px 11px; box-shadow:none; text-align:left;
+    transition: border-color .2s, background .2s;
+  }
+  .anim-card:hover{ border-color: var(--gold); background: var(--panel-2); transform:none; box-shadow:none; }
+  .anim-card.active{
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--gold) 12%, transparent);
+  }
+  .anim-card-check{
+    position:absolute; top:9px; right:10px; font-size:12px; font-weight:700; color: var(--accent);
+  }
+  .anim-card-name{ font-size:14px; font-weight:600; padding-right:16px; }
+  .anim-card-desc{ font-size:11.5px; color: var(--text-dim); line-height:1.35; }
   .tabs{
     display:flex; gap:6px; max-width:560px; margin:0 auto 22px; border-bottom:1px solid var(--border);
   }
